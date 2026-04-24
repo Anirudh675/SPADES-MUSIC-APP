@@ -1,7 +1,118 @@
-Hi this it the SPADES MUSIC APP, A MP3 Player made for people who want to play songs offline for windows only. Enjoy. Feaurtues: Great Modern Liquid Glass UI, Mac like Control Buttons, Custom Place to put  your data storage area, recalles all the songs in that folder and can resume playback from where you stopped last time, Shortcuts are to play, go previous and go next, volume controller, Watch Folder where when you add a new song by clciking on refresh button that song auto adds, Lyrics Page which can be accessed by clciking on the song thumbnail and it also  highlights the lyrics that is in now (the lyrics only works when you are online), shuffle button to shuffle songs, loop button to loop the song once, settings page  to change the  glass effect intensity from 5 to 50 and also change the location of the data storage area, great animation and finally queue controller where you can add songs to the queue, rearrage it and when the songs are shuffle look what is next in that as well, and change if you dont like it, Better to use in a computer which is 1920x1200 but it also works  in 1920x1080  might overflow somethings. Enjoy.
+# SPADES Music App 🎵
 
-Shorcuts:
-Ctrl+Shift+Space = Play/Pause the music
-Ctrl+Left Arrow = Play Previous
-Ctrl+Right Arrow = Play Next
-Ctrl+Q = View Queue.
+> A free, offline Windows music player built with Flutter — no ads, no internet required, no account needed.
+
+![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-Download-blue?style=for-the-badge&logo=microsoft)
+![Flutter](https://img.shields.io/badge/Flutter-Framework-02569B?style=for-the-badge&logo=flutter)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-1.0.0-purple?style=for-the-badge)
+
+---
+
+## 📸 Screenshots
+
+<!-- Add your screenshots here -->
+![SPADES Music App Screenshot](assets/screenshot.png)
+
+---
+
+## ✨ Features
+
+- 🎵 Play local music files completely offline
+- 📁 Add individual files or entire folders
+- 👀 Watch folder — automatically detects new songs
+- 🔍 Search by song, artist or album
+- 📝 Click song artwork to view synced lyrics powered by LRCLIB
+- 🎨 Beautiful modern UI with acrylic blur effect
+- 🚫 No ads, no tracking, no data collection
+- 🆓 Completely free forever
+
+---
+
+## 📥 Download
+
+Download SPADES Music App on the Microsoft Store:
+
+[![Microsoft Store](https://img.shields.io/badge/Download%20on%20Microsoft%20Store-0078D4?style=for-the-badge&logo=microsoft)](YOUR_STORE_LINK_HERE)
+
+---
+
+## 🛠️ Built With
+
+- [Flutter](https://flutter.dev) — UI framework
+- [Dart](https://dart.dev) — Programming language
+- [LRCLIB](https://lrclib.net) — Lyrics fetching
+- [audiotags](https://pub.dev/packages/audiotags) — Reading music metadata
+- [audioplayers](https://pub.dev/packages/audioplayers) — Audio playback
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Flutter SDK
+- Windows 10 or later
+
+### Installation from source
+```bash
+# Clone the repository
+git clone https://github.com/Anirudh675/SPADES-MUSIC-APP.git
+
+# Navigate to project folder
+cd SPADES-MUSIC-APP
+
+# Install dependencies
+flutter pub get
+
+# Run the app
+flutter run -d windows
+```
+
+---
+
+## 📖 How to Use
+
+1. Download and install from the Microsoft Store
+2. Open SPADES Music App
+3. Click **Add Files** to add songs or **Add Folder** to add a whole folder
+4. Click any song to start playing
+5. Use the playback controls at the bottom to play, pause, skip and adjust volume
+6. Click the **song artwork** on the right to view synced lyrics
+7. Use **Watch Folder** to automatically detect new songs added to a folder
+8. Use the **search bar** to find any song, artist or album instantly
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Equalizer
+- [ ] Playlist support
+- [ ] Dark and light theme toggle
+- [ ] Mini player mode
+- [ ] Sleep timer
+
+---
+
+## 👨‍💻 Developer
+
+**Anirudh675**
+- 16 year old self taught developer from Melbourne, Australia
+- Built and published this app entirely for free with no formal training
+- GitHub: [@Anirudh675](https://github.com/Anirudh675)
+
+---
+
+## 📄 License
+
+© 2026 Anirudh675. All rights reserved. SPADES Music App™
+
+---
+
+## ⭐ Support
+
+If you enjoy SPADES Music App please consider:
+- Leaving a **review on the Microsoft Store**
+- Giving this repository a **⭐ star on GitHub**
+- Sharing it with your friends
+
+Every star and review helps more people discover the app!
