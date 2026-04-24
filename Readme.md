@@ -33,7 +33,7 @@
 
 Download SPADES Music App on the Microsoft Store:
 
-[![Microsoft Store](https://img.shields.io/badge/Download%20on%20Microsoft%20Store-0078D4?style=for-the-badge&logo=microsoft)](YOUR_STORE_LINK_HERE)
+[![Microsoft Store](https://img.shields.io/badge/Download%20on%20Microsoft%20Store-0078D4?style=for-the-badge&logo=microsoft)](https://apps.microsoft.com/detail/9P9L6P0QXZBL)
 
 ---
 
