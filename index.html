@@ -1,362 +1,689 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SPADES Music App — Free Offline Music Player for Windows</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --p:#7c3aed;--pl:#a855f7;--pm:#8b5cf6;
-  --cyan:#06b6d4;--pink:#ec4899;--neon:#b44fff;
-  --bg:#02010a;--text:#f0ebff;--muted:#8b7db8;
-  --border:rgba(139,92,246,0.2);
-}
-html{height:100%;scroll-behavior:smooth}
-body{
-  background:var(--bg);color:var(--text);
-  font-family:'DM Sans',sans-serif;
-  overflow-x:hidden;cursor:none;
-  user-select:none;
-}
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--p);border-radius:10px}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SPADES Music App — Free Offline Music Player for Windows</title>
+  <meta name="description" content="SPADES Music App is a free offline Windows music player. No ads, no internet required, no account needed."/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #7c3aed;
+      --purple-light: #a855f7;
+      --purple-mid: #8b5cf6;
+      --cyan: #06b6d4;
+      --pink: #ec4899;
+      --neon: #b44fff;
+      --bg: #04020f;
+      --bg2: #070414;
+      --text: #f0ebff;
+      --text-muted: #8b7db8;
+      --border: rgba(139,92,246,0.2);
+      --glow: rgba(124,58,237,0.35);
+    }
+    html { scroll-behavior: smooth; height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
 
-/* ─── CURSOR ─── */
-#cur{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--pl);
-pointer-events:none;z-index:9999;transform:translate(-50%,-50%);
-mix-blend-mode:screen;transition:width .15s,height .15s}
-#cur-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(168,85,247,.45);
-border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);
-transition:left .1s ease,top .1s ease,width .3s,height .3s}
+    /* CUSTOM CURSOR */
+    #cursor {
+      position: fixed; width: 12px; height: 12px;
+      background: var(--purple-light); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background 0.2s;
+      mix-blend-mode: screen;
+    }
+    #cursor-trail {
+      position: fixed; width: 40px; height: 40px;
+      border: 1px solid rgba(168,85,247,0.4);
+      border-radius: 50%; pointer-events: none; z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.12s ease, width 0.3s, height 0.3s;
+    }
+    body:hover #cursor { opacity: 1; }
 
-/* ─── LOADING SCREEN ─── */
-#loader{
-  position:fixed;inset:0;background:#02010a;z-index:10000;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;
-}
-.loader-logo{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
-background:linear-gradient(135deg,#a855f7,#06b6d4);
--webkit-background-clip:text;-webkit-text-fill-color:transparent;
-filter:drop-shadow(0 0 20px rgba(168,85,247,.5))}
-.loader-bar-wrap{width:220px;height:2px;background:rgba(139,92,246,.15);border-radius:2px;overflow:hidden}
-.loader-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--p),var(--cyan));
-border-radius:2px;box-shadow:0 0 8px var(--pl);transition:width .05s}
-.loader-text{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.12em}
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 10px; }
 
-/* ─── MAIN CANVAS (full page) ─── */
-#main-canvas{
-  position:fixed;inset:0;width:100vw;height:100vh;z-index:1;
-}
+    /* THREE.JS CANVAS - FIXED BACKGROUND */
+    #bg-canvas {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0; pointer-events: none;
+    }
 
-/* ─── HTML OVERLAY CONTENT ─── */
-#overlay{
-  position:relative;z-index:10;pointer-events:none;
-}
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 3rem;
+      background: rgba(4,2,15,0.6);
+      backdrop-filter: blur(32px);
+      border-bottom: 1px solid rgba(139,92,246,0.15);
+    }
+    nav::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168,85,247,0.6), transparent);
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      display: flex; align-items: center; gap: 0.4rem;
+      filter: drop-shadow(0 0 12px rgba(168,85,247,0.5));
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--text-muted); text-decoration: none; font-size: 0.875rem;
+      font-weight: 500; transition: color 0.2s, text-shadow 0.2s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -3px; left: 0; right: 0; height: 1px;
+      background: var(--purple-light); transform: scaleX(0);
+      transition: transform 0.25s ease; transform-origin: left;
+    }
+    .nav-links a:hover { color: var(--text); text-shadow: 0 0 14px rgba(168,85,247,0.6); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+    .nav-dl {
+      background: linear-gradient(135deg, var(--purple), var(--purple-light));
+      color: white; padding: 0.5rem 1.25rem; border-radius: 100px;
+      text-decoration: none; font-size: 0.825rem; font-weight: 600;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 20px rgba(124,58,237,0.4);
+    }
+    .nav-dl:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 0 35px rgba(168,85,247,0.7); }
 
-/* ─── INTRO PHASE: skip button ─── */
-#skip-btn{
-  position:fixed;bottom:2rem;right:2rem;z-index:500;
-  background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);
-  color:var(--muted);padding:.4rem 1rem;border-radius:100px;
-  font-size:.72rem;font-family:'Space Mono',monospace;letter-spacing:.06em;
-  cursor:pointer;pointer-events:all;
-  transition:color .2s,border-color .2s,background .2s;
-  opacity:0;
-}
-#skip-btn:hover{color:var(--text);border-color:var(--pl);background:rgba(139,92,246,.18)}
+    /* PAGE CONTENT WRAPPER */
+    #content {
+      position: relative; z-index: 10;
+    }
 
-/* ─── PHASE INDICATOR ─── */
-#phase-label{
-  position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);
-  z-index:500;font-family:'Space Mono',monospace;font-size:.6rem;
-  color:rgba(139,92,246,.45);letter-spacing:.15em;text-transform:uppercase;
-  opacity:0;transition:opacity .4s;pointer-events:none;
-}
+    /* ===================== HERO 3D SECTION ===================== */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 8rem 2rem 4rem; text-align: center;
+      position: relative; overflow: hidden;
+    }
 
-/* ─── SCROLL PROMPT ─── */
-#scroll-prompt{
-  position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);
-  z-index:500;display:flex;flex-direction:column;align-items:center;gap:.5rem;
-  opacity:0;pointer-events:none;
-}
-.sp-text{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase}
-.sp-wheel{
-  width:22px;height:34px;border:1px solid rgba(139,92,246,.4);border-radius:12px;
-  display:flex;justify-content:center;padding-top:5px;
-}
-.sp-dot{width:3px;height:7px;background:var(--pl);border-radius:2px;
-animation:wheel-drop 1.6s ease infinite}
-@keyframes wheel-drop{0%,100%{opacity:1;transform:translateY(0)}70%{opacity:0;transform:translateY(10px)}}
+    /* HOLOGRAPHIC SCANLINES */
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none; z-index: 1;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(139,92,246,0.015) 2px,
+        rgba(139,92,246,0.015) 4px
+      );
+    }
 
-/* ─── NAV ─── */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:200;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:1rem 3rem;
-  background:rgba(2,1,10,0);
-  backdrop-filter:blur(0px);
-  border-bottom:1px solid rgba(139,92,246,0);
-  transition:all .6s ease;
-  pointer-events:none;opacity:0;
-}
-nav.visible{pointer-events:all;opacity:1;
-  background:rgba(2,1,10,.75);backdrop-filter:blur(28px);
-  border-bottom:1px solid rgba(139,92,246,.12)}
-nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-background:linear-gradient(90deg,transparent,rgba(168,85,247,.4),rgba(6,182,212,.2),transparent)}
-.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;
-background:linear-gradient(135deg,#a855f7,#ec4899);
--webkit-background-clip:text;-webkit-text-fill-color:transparent;
-filter:drop-shadow(0 0 10px rgba(168,85,247,.4))}
-.nav-links{display:flex;gap:1.75rem;list-style:none}
-.nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;
-transition:color .2s,text-shadow .2s}
-.nav-links a:hover{color:var(--text);text-shadow:0 0 12px rgba(168,85,247,.6)}
-.nav-dl{background:linear-gradient(135deg,var(--p),var(--pl));color:#fff;
-padding:.45rem 1.1rem;border-radius:100px;text-decoration:none;
-font-size:.8rem;font-weight:600;
-box-shadow:0 0 20px rgba(124,58,237,.4);
-transition:transform .2s,box-shadow .2s}
-.nav-dl:hover{transform:translateY(-1px);box-shadow:0 0 35px rgba(168,85,247,.7)}
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.35);
+      padding: 0.35rem 1rem; border-radius: 100px;
+      font-size: 0.75rem; color: var(--purple-light); font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 1.75rem;
+      opacity: 0; transform: translateY(20px);
+      position: relative; z-index: 2;
+      box-shadow: 0 0 20px rgba(124,58,237,0.2), inset 0 0 20px rgba(124,58,237,0.05);
+    }
+    .badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--purple-light);
+      box-shadow: 0 0 8px var(--purple-light);
+      animation: blink 2s ease infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;box-shadow:0 0 8px var(--purple-light)} 50%{opacity:0.3;box-shadow:none} }
 
-/* ─── SECTIONS (HTML Panels, shown after emergence) ─── */
-#site-content{
-  position:relative;z-index:10;
-  opacity:0;pointer-events:none;
-  margin-top:100vh; /* below the fold — scroll will reveal */
-}
-#site-content.active{opacity:1;pointer-events:all}
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 800; line-height: 1.0;
+      letter-spacing: -0.04em; margin-bottom: 1.25rem;
+      opacity: 0; transform: translateY(20px);
+      position: relative; z-index: 2;
+      text-shadow: 0 0 60px rgba(124,58,237,0.3);
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #ec4899 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 25px rgba(168,85,247,0.5));
+      animation: hue-shift 6s ease infinite alternate;
+    }
+    @keyframes hue-shift {
+      0% { filter: drop-shadow(0 0 25px rgba(168,85,247,0.5)) hue-rotate(0deg); }
+      100% { filter: drop-shadow(0 0 35px rgba(6,182,212,0.6)) hue-rotate(20deg); }
+    }
+    .hero-sub {
+      font-size: 1.1rem; color: var(--text-muted); max-width: 520px;
+      margin: 0 auto 2.25rem; line-height: 1.7; font-weight: 300;
+      opacity: 0; transform: translateY(20px);
+      position: relative; z-index: 2;
+    }
+    .hero-btns {
+      display: flex; gap: 0.875rem; justify-content: center; flex-wrap: wrap;
+      opacity: 0; transform: translateY(20px);
+      position: relative; z-index: 2;
+    }
+    .btn-main {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: linear-gradient(135deg, var(--purple), var(--purple-light));
+      color: white; padding: 0.85rem 1.75rem; border-radius: 100px;
+      text-decoration: none; font-weight: 600; font-size: 0.9rem;
+      box-shadow: 0 0 30px rgba(124,58,237,0.45);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-main::before {
+      content: ''; position: absolute; inset: -2px;
+      background: linear-gradient(135deg, var(--purple), var(--cyan), var(--pink));
+      border-radius: 100px; z-index: -1; opacity: 0;
+      transition: opacity 0.3s; animation: border-spin 3s linear infinite;
+    }
+    @keyframes border-spin { 0%{filter:hue-rotate(0)} 100%{filter:hue-rotate(360deg)} }
+    .btn-main:hover { transform: translateY(-3px); box-shadow: 0 0 50px rgba(124,58,237,0.7); }
+    .btn-main:hover::before { opacity: 1; }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: transparent; color: var(--text);
+      padding: 0.85rem 1.75rem; border-radius: 100px;
+      text-decoration: none; font-weight: 500; font-size: 0.9rem;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .btn-ghost:hover {
+      border-color: var(--purple-light); background: rgba(139,92,246,0.1);
+      transform: translateY(-2px); box-shadow: 0 0 20px rgba(139,92,246,0.2);
+    }
 
-.section{
-  padding:7rem 2rem;max-width:1100px;margin:0 auto;
-}
-.sec-label{text-align:center;font-size:.7rem;letter-spacing:.15em;
-text-transform:uppercase;color:var(--pl);font-weight:600;margin-bottom:.7rem;
-text-shadow:0 0 10px rgba(168,85,247,.4)}
-.sec-title{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,3.5vw,2.5rem);
-font-weight:800;text-align:center;letter-spacing:-.03em;margin-bottom:.75rem}
-.sec-sub{text-align:center;color:var(--muted);font-size:.92rem;
-max-width:440px;margin:0 auto 3.5rem;line-height:1.65}
+    /* ===================== 3D FLOATING APP WINDOW ===================== */
+    .hero-window-wrap {
+      margin-top: 4rem; position: relative; width: 100%; max-width: 940px;
+      opacity: 0; transform: perspective(1200px) rotateX(20deg) translateY(30px);
+      transform-style: preserve-3d;
+      position: relative; z-index: 2;
+    }
+    .os-window {
+      background: rgba(10, 5, 30, 0.85);
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 14px;
+      box-shadow:
+        0 0 0 1px rgba(168,85,247,0.15),
+        0 30px 80px rgba(0,0,0,0.7),
+        0 0 60px rgba(124,58,237,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      transform-style: preserve-3d;
+      transition: transform 0.08s ease;
+    }
+    .os-window-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.7rem 1rem;
+      background: rgba(15, 8, 40, 0.9);
+      border-bottom: 1px solid rgba(139,92,246,0.15);
+    }
+    .os-window-dots { display: flex; gap: 0.4rem; }
+    .os-dot {
+      width: 11px; height: 11px; border-radius: 50%;
+      cursor: pointer; transition: filter 0.2s;
+    }
+    .os-dot:nth-child(1) { background: #ff5f57; box-shadow: 0 0 6px #ff5f57; }
+    .os-dot:nth-child(2) { background: #febc2e; box-shadow: 0 0 6px #febc2e; }
+    .os-dot:nth-child(3) { background: #28c840; box-shadow: 0 0 6px #28c840; }
+    .os-dot:hover { filter: brightness(1.3); }
+    .os-window-title {
+      font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 600;
+      color: var(--text-muted); letter-spacing: 0.06em;
+    }
+    .os-window-controls { display: flex; gap: 0.5rem; opacity: 0.5; }
+    .os-window-controls span { font-size: 0.8rem; }
+    .os-window-body {
+      padding: 1.5rem; display: grid;
+      grid-template-columns: 200px 1fr; gap: 1.25rem; min-height: 340px;
+    }
+    /* Sidebar */
+    .app-sidebar {
+      background: rgba(15,8,40,0.6); border-radius: 10px;
+      border: 1px solid rgba(139,92,246,0.1);
+      padding: 1rem 0.75rem;
+      display: flex; flex-direction: column; gap: 0.35rem;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.75rem; border-radius: 8px;
+      font-size: 0.8rem; color: var(--text-muted);
+      cursor: pointer; transition: background 0.2s, color 0.2s;
+    }
+    .sidebar-item:hover, .sidebar-item.active {
+      background: rgba(139,92,246,0.15); color: var(--text);
+    }
+    .sidebar-item.active { border-left: 2px solid var(--purple-light); }
+    .sidebar-item .si-icon { font-size: 0.95rem; }
+    /* Main area */
+    .app-main { display: flex; flex-direction: column; gap: 1rem; }
+    .app-header-bar {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .app-header-bar h3 {
+      font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    }
+    .app-search {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 100px; padding: 0.35rem 0.9rem; font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    /* Song rows */
+    .song-list { display: flex; flex-direction: column; gap: 0.35rem; }
+    .song-row {
+      display: flex; align-items: center; gap: 0.85rem;
+      padding: 0.6rem 0.75rem; border-radius: 10px;
+      transition: background 0.2s, transform 0.2s; cursor: pointer;
+    }
+    .song-row:hover { background: rgba(139,92,246,0.1); transform: translateX(4px); }
+    .song-row.playing { background: rgba(139,92,246,0.18); }
+    .song-art {
+      width: 38px; height: 38px; border-radius: 8px;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; position: relative;
+    }
+    .song-art-1 { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+    .song-art-2 { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+    .song-art-3 { background: linear-gradient(135deg, #be185d, #ec4899); }
+    .song-art-4 { background: linear-gradient(135deg, #065f46, #10b981); }
+    .song-art-5 { background: linear-gradient(135deg, #92400e, #f59e0b); }
+    .song-info { flex: 1; min-width: 0; }
+    .song-title { font-size: 0.82rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .song-artist { font-size: 0.73rem; color: var(--text-muted); }
+    .song-dur { font-size: 0.73rem; color: var(--text-muted); }
+    .playing-bar {
+      display: flex; gap: 2px; align-items: flex-end; height: 14px;
+    }
+    .pb { width: 3px; background: var(--purple-light); border-radius: 2px; }
+    .pb:nth-child(1) { animation: bar1 0.8s ease infinite; }
+    .pb:nth-child(2) { animation: bar2 0.6s ease infinite; }
+    .pb:nth-child(3) { animation: bar3 0.9s ease infinite; }
+    @keyframes bar1 { 0%,100%{height:4px} 50%{height:14px} }
+    @keyframes bar2 { 0%,100%{height:10px} 50%{height:4px} }
+    @keyframes bar3 { 0%,100%{height:7px} 50%{height:12px} }
 
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:3rem}
-.feat-card{
-  background:linear-gradient(145deg,rgba(139,92,246,.06),rgba(10,5,30,.95));
-  border:1px solid rgba(139,92,246,.15);border-radius:16px;padding:1.6rem;
-  transition:transform .3s,border-color .3s,box-shadow .3s;
-  position:relative;overflow:hidden;cursor:default;
-}
-.feat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-background:linear-gradient(90deg,transparent,rgba(139,92,246,.5),transparent);
-opacity:0;transition:opacity .3s}
-.feat-card:hover{transform:translateY(-5px);border-color:rgba(139,92,246,.4);
-box-shadow:0 18px 45px rgba(124,58,237,.12)}
-.feat-card:hover::after{opacity:1}
-.feat-icon{width:42px;height:42px;border-radius:10px;
-background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.2);
-display:flex;align-items:center;justify-content:center;
-font-size:1.2rem;margin-bottom:1rem;box-shadow:0 0 10px rgba(124,58,237,.12)}
-.feat-card h3{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:.4rem}
-.feat-card p{font-size:.82rem;color:var(--muted);line-height:1.6}
+    /* Player bar */
+    .player-bar {
+      margin-top: auto;
+      background: rgba(15,8,40,0.8); border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 12px; padding: 0.9rem 1.1rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .player-art {
+      width: 42px; height: 42px; border-radius: 8px;
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+      box-shadow: 0 0 15px rgba(124,58,237,0.4);
+    }
+    .player-info { flex: 1; min-width: 0; }
+    .player-title { font-size: 0.82rem; font-weight: 600; }
+    .player-artist { font-size: 0.72rem; color: var(--text-muted); }
+    .progress-wrap {
+      flex: 2; display: flex; flex-direction: column; gap: 0.35rem;
+    }
+    .progress-bar-bg {
+      height: 4px; background: rgba(139,92,246,0.2); border-radius: 4px;
+      cursor: pointer; position: relative; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%; width: 38%; border-radius: 4px;
+      background: linear-gradient(90deg, var(--purple), var(--purple-light));
+      box-shadow: 0 0 8px var(--purple-light);
+      position: relative;
+    }
+    .progress-bar-fill::after {
+      content: ''; position: absolute; right: 0; top: 50%;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: white; transform: translate(50%, -50%);
+      box-shadow: 0 0 6px var(--purple-light);
+    }
+    .player-controls { display: flex; gap: 0.6rem; align-items: center; }
+    .pc-btn {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 1.1rem; transition: color 0.2s, transform 0.2s;
+    }
+    .pc-btn:hover { color: var(--text); transform: scale(1.15); }
+    .pc-play {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--purple-light));
+      display: flex; align-items: center; justify-content: center;
+      border: none; cursor: pointer; font-size: 0.85rem; color: white;
+      box-shadow: 0 0 14px rgba(124,58,237,0.5);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .pc-play:hover { transform: scale(1.1); box-shadow: 0 0 22px rgba(124,58,237,0.7); }
 
-.steps-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;
-max-width:1000px;margin:3.5rem auto 0;position:relative}
-.steps-row::before{content:'';position:absolute;top:29px;left:12%;right:12%;height:1px;
-background:linear-gradient(90deg,transparent,var(--pm),var(--cyan),transparent);opacity:.4}
-.step{text-align:center;padding:0 .5rem}
-.step-num{width:58px;height:58px;border-radius:50%;
-background:linear-gradient(135deg,rgba(76,29,149,.8),var(--p));
-border:2px solid rgba(139,92,246,.5);
-display:flex;align-items:center;justify-content:center;
-font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;
-margin:0 auto 1rem;box-shadow:0 0 22px rgba(124,58,237,.35);position:relative;z-index:1;
-transition:box-shadow .3s,transform .3s}
-.step:hover .step-num{transform:scale(1.1);box-shadow:0 0 38px rgba(124,58,237,.6)}
-.step h3{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;margin-bottom:.4rem}
-.step p{font-size:.78rem;color:var(--muted);line-height:1.6}
+    /* WINDOW GLOW */
+    .window-glow {
+      position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%);
+      width: 60%; height: 80px;
+      background: radial-gradient(ellipse, rgba(124,58,237,0.5) 0%, transparent 70%);
+      filter: blur(25px); pointer-events: none; z-index: 1;
+    }
 
-.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
-.about-text .sec-label,.about-text .sec-title{text-align:left}
-.about-text p{color:var(--muted);line-height:1.8;font-size:.88rem;margin-bottom:.85rem}
-.about-card{
-  background:linear-gradient(145deg,rgba(139,92,246,.1),rgba(10,5,30,.95));
-  border:1px solid rgba(139,92,246,.2);border-radius:20px;padding:2rem;
-  position:relative;overflow:hidden;
-  box-shadow:0 20px 55px rgba(0,0,0,.4),0 0 28px rgba(124,58,237,.1);
-  backdrop-filter:blur(10px);
-  transition:transform .3s,box-shadow .3s;
-}
-.about-card:hover{transform:perspective(800px) rotateY(-4deg) translateZ(8px);
-box-shadow:0 28px 70px rgba(0,0,0,.5),0 0 38px rgba(124,58,237,.2)}
-.about-card::before{content:'♠';position:absolute;bottom:-18px;right:-8px;
-font-size:8rem;opacity:.04;pointer-events:none;font-family:'Syne',sans-serif}
-.av{width:58px;height:58px;border-radius:50%;
-background:linear-gradient(135deg,var(--p),var(--pink));
-display:flex;align-items:center;justify-content:center;
-font-size:1.5rem;margin-bottom:1rem;box-shadow:0 0 18px rgba(124,58,237,.4)}
-.about-card h3{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:.2rem}
-.about-role{font-size:.72rem;color:var(--pl);font-weight:600;letter-spacing:.05em;
-text-transform:uppercase;margin-bottom:.85rem}
-.about-card>p{font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:1rem}
-.tags{display:flex;flex-wrap:wrap;gap:.35rem}
-.tag{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.2);
-color:var(--pl);padding:.22rem .6rem;border-radius:100px;font-size:.7rem;font-weight:500;
-transition:background .2s,border-color .2s}
-.tag:hover{background:rgba(139,92,246,.22);border-color:rgba(168,85,247,.45)}
+    /* FLOATING ICONS */
+    .float-icons { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+    .fi {
+      position: absolute; font-size: 1.6rem;
+      filter: drop-shadow(0 0 8px rgba(168,85,247,0.6));
+      animation: float-drift var(--d, 4s) ease-in-out infinite;
+      opacity: 0.7;
+    }
+    @keyframes float-drift {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(calc(var(--dy, -15px))) rotate(var(--r, 5deg)); }
+    }
+    .fi:nth-child(1) { top: 20%; left: 5%; --d:4.2s; --dy:-12px; --r:6deg; }
+    .fi:nth-child(2) { top: 35%; right: 4%; --d:3.8s; --dy:-18px; --r:-4deg; }
+    .fi:nth-child(3) { top: 70%; left: 8%; --d:5s; --dy:-10px; --r:3deg; }
+    .fi:nth-child(4) { top: 60%; right: 7%; --d:4.5s; --dy:-14px; --r:-7deg; }
+    .fi:nth-child(5) { top: 15%; right: 12%; --d:3.5s; --dy:-20px; --r:10deg; }
 
-.cta-section{padding:7rem 2rem;text-align:center;position:relative;overflow:hidden}
-.cta-section::before{content:'';position:absolute;inset:0;pointer-events:none;
-background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(124,58,237,.16) 0%,transparent 70%)}
-.cta-inner{position:relative;z-index:2;max-width:540px;margin:0 auto}
-.cta-section h2{font-family:'Syne',sans-serif;
-font-size:clamp(1.8rem,3.8vw,3rem);font-weight:800;
-letter-spacing:-.03em;line-height:1.1;margin-bottom:1rem}
-.cta-section p{color:var(--muted);font-size:.95rem;margin-bottom:2rem;line-height:1.6}
-.cta-note{margin-top:1.1rem;font-size:.74rem;color:var(--muted)}
-.cta-note span{color:var(--pl);font-weight:500}
+    /* ===================== SECTIONS ===================== */
+    section { position: relative; z-index: 10; }
 
-.btn-main{display:inline-flex;align-items:center;gap:.5rem;
-background:linear-gradient(135deg,var(--p),var(--pl));color:#fff;
-padding:.85rem 1.7rem;border-radius:100px;text-decoration:none;
-font-weight:600;font-size:.88rem;
-box-shadow:0 0 28px rgba(124,58,237,.4);
-transition:transform .2s,box-shadow .2s}
-.btn-main:hover{transform:translateY(-2px);box-shadow:0 0 45px rgba(124,58,237,.65)}
-.btn-ghost{display:inline-flex;align-items:center;gap:.5rem;
-background:transparent;color:var(--text);
-padding:.85rem 1.7rem;border-radius:100px;text-decoration:none;
-font-weight:500;font-size:.88rem;border:1px solid var(--border);
-backdrop-filter:blur(8px);transition:border-color .2s,background .2s,transform .2s}
-.btn-ghost:hover{border-color:var(--pl);background:rgba(139,92,246,.1);transform:translateY(-2px)}
+    .sec-label {
+      text-align: center; font-size: 0.72rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--purple-light);
+      font-weight: 600; margin-bottom: 0.75rem;
+      text-shadow: 0 0 10px rgba(168,85,247,0.4);
+    }
+    .sec-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800;
+      text-align: center; letter-spacing: -0.03em; margin-bottom: 0.75rem;
+    }
+    .sec-sub {
+      text-align: center; color: var(--text-muted); font-size: 0.95rem;
+      max-width: 460px; margin: 0 auto 3.5rem; line-height: 1.6;
+    }
 
-footer{border-top:1px solid rgba(139,92,246,.1);padding:2rem 3rem;
-display:flex;align-items:center;justify-content:space-between;
-background:rgba(0,0,0,.25);backdrop-filter:blur(10px);position:relative;z-index:10}
-footer::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-background:linear-gradient(90deg,transparent,rgba(168,85,247,.35),rgba(6,182,212,.2),transparent)}
-.footer-logo{font-family:'Syne',sans-serif;font-weight:800;
-background:linear-gradient(135deg,#a855f7,#ec4899);
--webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.footer-links{display:flex;gap:1.5rem;list-style:none}
-.footer-links a{color:var(--muted);text-decoration:none;font-size:.8rem;
-transition:color .2s}
-.footer-links a:hover{color:var(--text)}
-.footer-copy{font-size:.75rem;color:var(--muted)}
+    /* PILLS ROW */
+    .pills {
+      display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
+      padding: 3rem 2rem;
+      border-top: 1px solid rgba(139,92,246,0.1);
+      border-bottom: 1px solid rgba(139,92,246,0.1);
+      background: rgba(10,5,25,0.5);
+      backdrop-filter: blur(10px);
+    }
+    .pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.2);
+      padding: 0.5rem 1.1rem; border-radius: 100px;
+      font-size: 0.82rem; color: var(--text-muted); font-weight: 500;
+      transition: border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .pill:hover {
+      border-color: rgba(168,85,247,0.5); color: var(--text);
+      background: rgba(139,92,246,0.12); box-shadow: 0 0 12px rgba(139,92,246,0.15);
+    }
+    .pill-icon { font-size: 1rem; }
 
-.reveal{opacity:0;transform:translateY(28px);
-transition:opacity .7s ease,transform .7s ease}
-.reveal.on{opacity:1;transform:none}
+    /* ===================== FEATURES ===================== */
+    .features {
+      padding: 7rem 2rem; max-width: 1100px; margin: 0 auto;
+    }
+    .feat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem; margin-top: 3.5rem;
+    }
+    .feat-card {
+      background: linear-gradient(145deg, rgba(139,92,246,0.06), rgba(10,5,30,0.95));
+      border: 1px solid rgba(139,92,246,0.15); border-radius: 18px;
+      padding: 1.75rem;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      position: relative; overflow: hidden;
+      transform-style: preserve-3d;
+      cursor: default;
+    }
+    .feat-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 18px;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(168,85,247,0.08), transparent 60%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .feat-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .feat-card:hover {
+      transform: translateY(-6px) perspective(600px) rotateX(2deg);
+      border-color: rgba(139,92,246,0.4);
+      box-shadow: 0 20px 50px rgba(124,58,237,0.15), 0 0 0 1px rgba(168,85,247,0.1);
+    }
+    .feat-card:hover::before { opacity: 1; }
+    .feat-card:hover::after { opacity: 1; }
+    .feat-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1.1rem;
+      box-shadow: 0 0 12px rgba(124,58,237,0.15);
+    }
+    .feat-card h3 {
+      font-family: 'Syne', sans-serif; font-size: 1rem;
+      font-weight: 700; margin-bottom: 0.5rem;
+    }
+    .feat-card p { font-size: 0.84rem; color: var(--text-muted); line-height: 1.65; }
 
-/* PRIVACY */
-.priv-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2rem}
+    /* ===================== HOW IT WORKS ===================== */
+    .hiw {
+      padding: 7rem 2rem;
+      background: linear-gradient(180deg, rgba(10,5,25,0.6), rgba(4,2,15,0.6));
+      backdrop-filter: blur(4px);
+    }
+    .steps-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem; max-width: 1000px; margin: 3.5rem auto 0;
+      position: relative;
+    }
+    .steps-row::before {
+      content: ''; position: absolute;
+      top: 30px; left: 12%; right: 12%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--purple-mid), var(--cyan), transparent);
+      opacity: 0.4;
+    }
+    .step { text-align: center; padding: 0 0.5rem; }
+    .step-num {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, rgba(76,29,149,0.8), var(--purple));
+      border: 2px solid rgba(139,92,246,0.5);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem;
+      margin: 0 auto 1.1rem;
+      box-shadow: 0 0 25px rgba(124,58,237,0.35); position: relative; z-index: 1;
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .step:hover .step-num {
+      transform: scale(1.08);
+      box-shadow: 0 0 40px rgba(124,58,237,0.6), 0 0 0 6px rgba(124,58,237,0.12);
+    }
+    .step h3 { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .step p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.6; }
 
-/* SECTION DIVIDER */
-.sec-divider{
-  width:100%;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(139,92,246,.2),rgba(6,182,212,.1),transparent);
-  max-width:1100px;margin:0 auto;
-}
+    /* ===================== ABOUT ===================== */
+    .about {
+      padding: 7rem 2rem; max-width: 1050px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center;
+    }
+    .about-text .sec-label, .about-text .sec-title { text-align: left; }
+    .about-text p { color: var(--text-muted); line-height: 1.8; font-size: 0.9rem; margin-bottom: 0.9rem; }
+    .about-card {
+      background: linear-gradient(145deg, rgba(139,92,246,0.1), rgba(10,5,30,0.95));
+      border: 1px solid rgba(139,92,246,0.2); border-radius: 22px; padding: 2.25rem;
+      position: relative; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(124,58,237,0.1);
+      backdrop-filter: blur(10px);
+      transform-style: preserve-3d;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .about-card:hover {
+      transform: perspective(800px) rotateY(-4deg) translateZ(10px);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 40px rgba(124,58,237,0.2);
+    }
+    .about-card::before {
+      content: '♠'; position: absolute; bottom: -20px; right: -10px;
+      font-size: 9rem; opacity: 0.04; pointer-events: none;
+      font-family: 'Syne', sans-serif;
+    }
+    .av {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; margin-bottom: 1.1rem;
+      box-shadow: 0 0 20px rgba(124,58,237,0.4);
+    }
+    .about-card h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; margin-bottom: 0.2rem; }
+    .about-role { font-size: 0.75rem; color: var(--purple-light); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.9rem; }
+    .about-card > p { font-size: 0.84rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 1.1rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tag {
+      background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.2);
+      color: var(--purple-light); padding: 0.25rem 0.65rem;
+      border-radius: 100px; font-size: 0.72rem; font-weight: 500;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .tag:hover {
+      background: rgba(139,92,246,0.22); border-color: rgba(168,85,247,0.4);
+      box-shadow: 0 0 8px rgba(168,85,247,0.3);
+    }
 
-/* PILLS */
-.pills{display:flex;justify-content:center;gap:.85rem;flex-wrap:wrap;
-padding:2.5rem 2rem;
-background:rgba(10,5,25,.4);backdrop-filter:blur(8px);
-border-top:1px solid rgba(139,92,246,.08);border-bottom:1px solid rgba(139,92,246,.08)}
-.pill{display:flex;align-items:center;gap:.45rem;
-background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.18);
-padding:.45rem 1rem;border-radius:100px;font-size:.78rem;color:var(--muted);font-weight:500;
-transition:border-color .2s,background .2s,color .2s}
-.pill:hover{border-color:rgba(168,85,247,.45);color:var(--text);background:rgba(139,92,246,.11)}
+    /* ===================== PRIVACY ===================== */
+    #privacy {
+      padding: 5rem 2rem;
+      background: linear-gradient(180deg, rgba(10,5,25,0.5), rgba(4,2,15,0.5));
+      backdrop-filter: blur(4px);
+    }
 
-/* ─── HOLOGRAPHIC TEXT TICKER ─── */
-#holo-ticker{
-  position:fixed;bottom:0;left:0;right:0;z-index:300;
-  height:24px;background:rgba(2,1,10,.8);border-top:1px solid rgba(139,92,246,.1);
-  display:flex;align-items:center;overflow:hidden;
-  opacity:0;pointer-events:none;
-  transition:opacity .4s;
-}
-#holo-ticker.visible{opacity:1}
-.ticker-inner{
-  display:flex;gap:0;white-space:nowrap;
-  animation:ticker-scroll 28s linear infinite;
-}
-.ticker-inner span{
-  font-family:'Space Mono',monospace;font-size:.58rem;
-  color:rgba(139,92,246,.45);letter-spacing:.12em;padding:0 3rem;
-}
-@keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    /* ===================== CTA ===================== */
+    .cta {
+      padding: 7rem 2rem; text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-glow {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(124,58,237,0.18) 0%, transparent 70%);
+    }
+    .cta::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(139,92,246,0.01) 2px, rgba(139,92,246,0.01) 4px
+      );
+    }
+    .cta-inner { position: relative; z-index: 2; max-width: 560px; margin: 0 auto; }
+    .cta h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.9rem, 4vw, 3.2rem); font-weight: 800;
+      letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 1rem;
+    }
+    .cta p { color: var(--text-muted); font-size: 1rem; margin-bottom: 2rem; line-height: 1.6; }
+    .cta-note { margin-top: 1.25rem; font-size: 0.78rem; color: var(--text-muted); }
+    .cta-note span { color: var(--purple-light); font-weight: 500; }
 
-/* ─── SCANLINES overlay ─── */
-#scanlines{
-  position:fixed;inset:0;z-index:5;pointer-events:none;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,
-  rgba(139,92,246,.008) 2px,rgba(139,92,246,.008) 4px);
-  opacity:0;transition:opacity 1s;
-}
-#scanlines.visible{opacity:1}
+    /* ===================== FOOTER ===================== */
+    footer {
+      border-top: 1px solid rgba(139,92,246,0.12); padding: 2rem 3rem;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      position: relative; z-index: 10;
+    }
+    footer::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168,85,247,0.4), rgba(6,182,212,0.2), transparent);
+    }
+    .footer-logo {
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 8px rgba(168,85,247,0.3));
+    }
+    .footer-links { display: flex; gap: 1.75rem; list-style: none; }
+    .footer-links a {
+      color: var(--text-muted); text-decoration: none; font-size: 0.82rem;
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+    .footer-links a:hover { color: var(--text); text-shadow: 0 0 10px rgba(168,85,247,0.4); }
+    .footer-copy { font-size: 0.78rem; color: var(--text-muted); }
 
-/* ─── RESPONSIVE ─── */
-@media(max-width:900px){
-  nav{padding:1rem 1.5rem}
-  .nav-links{display:none}
-  .feat-grid{grid-template-columns:1fr 1fr}
-  .steps-row{grid-template-columns:1fr 1fr}
-  .about-grid{grid-template-columns:1fr;gap:2.5rem}
-  footer{flex-direction:column;gap:1.5rem;text-align:center}
-  .footer-links{flex-wrap:wrap;justify-content:center}
-  .priv-grid{grid-template-columns:1fr}
-}
-@media(max-width:600px){
-  .feat-grid{grid-template-columns:1fr}
-  .steps-row{grid-template-columns:1fr 1fr}
-}
-</style>
+    /* ===================== REVEAL ANIMATIONS ===================== */
+    .reveal {
+      opacity: 0; transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.on { opacity: 1; transform: none; }
+
+    /* HOLOGRAPHIC BORDER EFFECT */
+    .holo-border {
+      position: relative;
+    }
+    .holo-border::after {
+      content: ''; position: absolute; inset: -1px; border-radius: inherit;
+      background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(6,182,212,0.2), rgba(236,72,153,0.2));
+      z-index: -1; opacity: 0; transition: opacity 0.3s;
+      animation: holo-rotate 4s linear infinite;
+    }
+    @keyframes holo-rotate {
+      0%{filter:hue-rotate(0)} 100%{filter:hue-rotate(360deg)}
+    }
+    .holo-border:hover::after { opacity: 1; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .feat-grid { grid-template-columns: 1fr 1fr; }
+      .steps-row { grid-template-columns: 1fr 1fr; }
+      .about { grid-template-columns: 1fr; gap: 3rem; }
+      footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
+      .os-window-body { grid-template-columns: 1fr; }
+      .app-sidebar { display: none; }
+    }
+    @media (max-width: 640px) {
+      .feat-grid { grid-template-columns: 1fr; }
+      .steps-row { grid-template-columns: 1fr 1fr; }
+      nav { padding: 1rem; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- CURSOR -->
-<div id="cur"></div>
-<div id="cur-ring"></div>
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
 
-<!-- LOADER -->
-<div id="loader">
-  <div class="loader-logo">♠ SPADES</div>
-  <div class="loader-bar-wrap"><div class="loader-bar" id="loader-bar"></div></div>
-  <div class="loader-text" id="loader-text">INITIALISING ENVIRONMENT...</div>
-</div>
-
-<!-- SCANLINES -->
-<div id="scanlines"></div>
-
-<!-- THREE.JS CANVAS -->
-<canvas id="main-canvas"></canvas>
-
-<!-- SKIP INTRO -->
-<button id="skip-btn">SKIP INTRO ↓</button>
-<div id="phase-label"></div>
-
-<!-- SCROLL PROMPT -->
-<div id="scroll-prompt">
-  <div class="sp-text">scroll to explore</div>
-  <div class="sp-wheel"><div class="sp-dot"></div></div>
-</div>
-
-<!-- HOLOGRAPHIC TICKER -->
-<div id="holo-ticker">
-  <div class="ticker-inner">
-    <span>♠ SPADES MUSIC APP · OFFLINE MUSIC PLAYER FOR WINDOWS · FREE · NO ADS · NO ACCOUNT · SYNCED LYRICS · GLASS UI ·</span>
-    <span>♠ SPADES MUSIC APP · OFFLINE MUSIC PLAYER FOR WINDOWS · FREE · NO ADS · NO ACCOUNT · SYNCED LYRICS · GLASS UI ·</span>
-  </div>
-</div>
+<!-- THREE.JS BACKGROUND CANVAS -->
+<canvas id="bg-canvas"></canvas>
 
 <!-- NAV -->
-<nav id="main-nav">
+<nav>
   <div class="nav-logo">♠ SPADES</div>
   <ul class="nav-links">
     <li><a href="#features">Features</a></li>
@@ -367,823 +694,574 @@ transition:border-color .2s,background .2s,color .2s}
   <a href="https://apps.microsoft.com/detail/9P9L6P0QXZBL" class="nav-dl" target="_blank">Download Free</a>
 </nav>
 
-<!-- SITE CONTENT (standard HTML scroll sections) -->
-<div id="overlay">
-  <div id="site-content">
+<div id="content">
 
-    <!-- HERO CONTENT AREA (below the 3D section) -->
-    <div id="hero-content" style="min-height:100vh;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 4rem;
-    position:relative;">
-      <!-- This space is filled by the 3D canvas hero -->
-    </div>
+<!-- HERO -->
+<section class="hero" id="hero">
+  <!-- Floating background icons -->
+  <div class="float-icons">
+    <div class="fi">🎵</div>
+    <div class="fi">🎶</div>
+    <div class="fi">♠</div>
+    <div class="fi">🎧</div>
+    <div class="fi">✦</div>
+  </div>
 
-    <div class="pills">
-      <div class="pill">🚫 No Ads</div>
-      <div class="pill">📶 100% Offline</div>
-      <div class="pill">🔒 No Account</div>
-      <div class="pill">🆓 Completely Free</div>
-      <div class="pill">🪟 Windows 10 &amp; 11</div>
-      <div class="pill">🎵 MP3, FLAC, WAV &amp; more</div>
-      <div class="pill">📝 Synced Lyrics</div>
-    </div>
+  <div class="hero-badge">
+    <div class="badge-dot"></div>
+    Free on Microsoft Store — Windows 10 &amp; 11
+  </div>
+  <h1>Music that's<br/><em>actually yours.</em></h1>
+  <p class="hero-sub">SPADES is a beautifully designed, completely offline music player for Windows. No ads, no account, no internet. Just music.</p>
+  <div class="hero-btns">
+    <a href="https://apps.microsoft.com/detail/9P9L6P0QXZBL" class="btn-main" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.551H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+      Download Free
+    </a>
+    <a href="#features" class="btn-ghost">Explore Features ↓</a>
+  </div>
 
-    <!-- FEATURES -->
-    <section id="features" class="section">
-      <div class="reveal">
-        <div class="sec-label">Why SPADES</div>
-        <h2 class="sec-title">Everything you need.<br/>Nothing you don't.</h2>
-        <p class="sec-sub">Built for people who just want to play their music without the nonsense.</p>
-      </div>
-      <div class="feat-grid reveal">
-        <div class="feat-card"><div class="feat-icon">📶</div><h3>Fully Offline</h3><p>Play your local music files without any internet connection. Works anywhere, anytime.</p></div>
-        <div class="feat-card"><div class="feat-icon">🚫</div><h3>Zero Ads</h3><p>No advertisements, no pop-ups, no interruptions. Ever. Just pure uninterrupted music.</p></div>
-        <div class="feat-card"><div class="feat-icon">🔒</div><h3>No Account Needed</h3><p>No sign up, no login, no personal data collected. Install and play. That's it.</p></div>
-        <div class="feat-card"><div class="feat-icon">📁</div><h3>Smart Folder Watching</h3><p>Add a folder and SPADES automatically detects new songs. Your library stays up to date.</p></div>
-        <div class="feat-card"><div class="feat-icon">📝</div><h3>Synced Lyrics</h3><p>Click any song artwork to instantly see synced lyrics fetched from LRCLIB. Supports Tamil, Hindi and more.</p></div>
-        <div class="feat-card"><div class="feat-icon">🎛️</div><h3>Queue &amp; Shuffle</h3><p>Manage your playback queue, reorder songs, shuffle and repeat with full control.</p></div>
-        <div class="feat-card"><div class="feat-icon">🔍</div><h3>Instant Search</h3><p>Search your entire library by song name, artist, or album. Find any track in seconds.</p></div>
-        <div class="feat-card"><div class="feat-icon">🪟</div><h3>Glass Effect UI</h3><p>Adjust the beautiful acrylic glass blur effect intensity to match your style in Settings.</p></div>
-        <div class="feat-card"><div class="feat-icon">🎨</div><h3>Beautiful Design</h3><p>A stunning dark purple UI that makes your music library look like it belongs on a poster.</p></div>
-      </div>
-    </section>
-
-    <div class="sec-divider"></div>
-
-    <!-- HOW IT WORKS -->
-    <section id="how" style="padding:7rem 2rem;background:linear-gradient(180deg,rgba(10,5,25,.4),rgba(2,1,10,.4));backdrop-filter:blur(4px)">
-      <div class="reveal">
-        <div class="sec-label">Getting started</div>
-        <h2 class="sec-title">Up and running in minutes</h2>
-        <p class="sec-sub">Four simple steps to your perfect music experience.</p>
-      </div>
-      <div class="steps-row reveal">
-        <div class="step"><div class="step-num">1</div><h3>Download</h3><p>Get SPADES free from the Microsoft Store in one click.</p></div>
-        <div class="step"><div class="step-num">2</div><h3>Add Music</h3><p>Click Add Files or Add Folder to add your music library.</p></div>
-        <div class="step"><div class="step-num">3</div><h3>Play</h3><p>Click any song to play. Shuffle, queue, repeat — all yours.</p></div>
-        <div class="step"><div class="step-num">4</div><h3>View Lyrics</h3><p>Tap the album art to instantly load synced lyrics.</p></div>
-      </div>
-    </section>
-
-    <div class="sec-divider"></div>
-
-    <!-- ABOUT -->
-    <section id="about" class="section">
-      <div class="about-grid">
-        <div class="about-text reveal">
-          <div class="sec-label">The developer</div>
-          <h2 class="sec-title" style="text-align:left">Built by a 16&#8202;year old<br/>from Melbourne</h2>
-          <p>SPADES Music App was built entirely by a self-taught developer from Melbourne, Australia — originally from Tamil Nadu, India.</p>
-          <p>No formal training, no financial support, no team. Just a passion for music, a love for building things, and a lot of determination.</p>
-          <p>Built in Flutter, packaged with MSIX, and published on the Microsoft Store — all completely free, all by one person at 16 years old.</p>
-          <a href="https://github.com/Anirudh675/SPADES-MUSIC-APP" class="btn-ghost" target="_blank" style="margin-top:1.25rem;display:inline-flex">View Source on GitHub</a>
+  <!-- 3D FLOATING APP WINDOW -->
+  <div class="hero-window-wrap" id="heroWindow">
+    <div class="window-glow"></div>
+    <div class="os-window" id="osWindow">
+      <div class="os-window-bar">
+        <div class="os-window-dots">
+          <div class="os-dot"></div>
+          <div class="os-dot"></div>
+          <div class="os-dot"></div>
         </div>
-        <div class="about-card reveal">
-          <div class="av">👨‍💻</div>
-          <h3>Anirudh675</h3>
-          <div class="about-role">Independent Developer · Age 16</div>
-          <p>Self-taught Flutter developer from Melbourne, Australia. Published SPADES on the Microsoft Store at 16 — completely free, completely solo.</p>
-          <div class="tags">
-            <span class="tag">Flutter</span><span class="tag">Dart</span>
-            <span class="tag">Windows</span><span class="tag">MSIX</span>
-            <span class="tag">Melbourne</span><span class="tag">Tamil Nadu</span>
+        <div class="os-window-title">♠ SPADES Music App</div>
+        <div class="os-window-controls"><span>—</span><span>⛶</span><span>✕</span></div>
+      </div>
+      <div class="os-window-body">
+        <!-- Sidebar -->
+        <div class="app-sidebar">
+          <div class="sidebar-item active"><span class="si-icon">🎵</span> Library</div>
+          <div class="sidebar-item"><span class="si-icon">▶</span> Now Playing</div>
+          <div class="sidebar-item"><span class="si-icon">📋</span> Queue</div>
+          <div class="sidebar-item"><span class="si-icon">💿</span> Albums</div>
+          <div class="sidebar-item"><span class="si-icon">🎤</span> Artists</div>
+          <div class="sidebar-item"><span class="si-icon">❤️</span> Favourites</div>
+          <div style="flex:1"></div>
+          <div class="sidebar-item"><span class="si-icon">📁</span> Add Folder</div>
+          <div class="sidebar-item"><span class="si-icon">⚙️</span> Settings</div>
+        </div>
+        <!-- Main -->
+        <div class="app-main">
+          <div class="app-header-bar">
+            <h3>My Library</h3>
+            <div class="app-search">🔍 Search songs...</div>
+          </div>
+          <div class="song-list">
+            <div class="song-row playing">
+              <div class="song-art song-art-1">🎵</div>
+              <div class="song-info"><div class="song-title">Blinding Lights</div><div class="song-artist">The Weeknd</div></div>
+              <div class="playing-bar"><div class="pb"></div><div class="pb"></div><div class="pb"></div></div>
+              <div class="song-dur">3:20</div>
+            </div>
+            <div class="song-row">
+              <div class="song-art song-art-2">🎵</div>
+              <div class="song-info"><div class="song-title">Levitating</div><div class="song-artist">Dua Lipa</div></div>
+              <div style="flex:1"></div>
+              <div class="song-dur">3:23</div>
+            </div>
+            <div class="song-row">
+              <div class="song-art song-art-3">🎶</div>
+              <div class="song-info"><div class="song-title">Heat Waves</div><div class="song-artist">Glass Animals</div></div>
+              <div style="flex:1"></div>
+              <div class="song-dur">3:59</div>
+            </div>
+            <div class="song-row">
+              <div class="song-art song-art-4">🎵</div>
+              <div class="song-info"><div class="song-title">As It Was</div><div class="song-artist">Harry Styles</div></div>
+              <div style="flex:1"></div>
+              <div class="song-dur">2:37</div>
+            </div>
+            <div class="song-row">
+              <div class="song-art song-art-5">🎶</div>
+              <div class="song-info"><div class="song-title">Starboy</div><div class="song-artist">The Weeknd ft. Daft Punk</div></div>
+              <div style="flex:1"></div>
+              <div class="song-dur">3:50</div>
+            </div>
+          </div>
+          <!-- Player bar -->
+          <div class="player-bar">
+            <div class="player-art">♠</div>
+            <div class="player-info"><div class="player-title">Blinding Lights</div><div class="player-artist">The Weeknd</div></div>
+            <div class="progress-wrap">
+              <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text-muted)"><span>1:16</span><span>3:20</span></div>
+            </div>
+            <div class="player-controls">
+              <button class="pc-btn">⏮</button>
+              <button class="pc-play">▶</button>
+              <button class="pc-btn">⏭</button>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <div class="sec-divider"></div>
+<!-- PILLS -->
+<div class="pills">
+  <div class="pill"><span class="pill-icon">🚫</span>No Ads</div>
+  <div class="pill"><span class="pill-icon">📶</span>100% Offline</div>
+  <div class="pill"><span class="pill-icon">🔒</span>No Account</div>
+  <div class="pill"><span class="pill-icon">🆓</span>Completely Free</div>
+  <div class="pill"><span class="pill-icon">🪟</span>Windows 10 &amp; 11</div>
+  <div class="pill"><span class="pill-icon">🎵</span>MP3, FLAC, WAV &amp; more</div>
+  <div class="pill"><span class="pill-icon">📝</span>Synced Lyrics</div>
+  <div class="pill"><span class="pill-icon">🌏</span>Tamil, Hindi &amp; more</div>
+</div>
 
-    <!-- PRIVACY -->
-    <section id="privacy" style="padding:5rem 2rem;background:rgba(10,5,25,.4);backdrop-filter:blur(4px)">
-      <div style="max-width:680px;margin:0 auto" class="reveal">
-        <div class="sec-label">Privacy</div>
-        <h2 class="sec-title">We collect nothing</h2>
-        <p class="sec-sub">Your privacy matters. SPADES is designed to respect it completely.</p>
-        <div class="priv-grid">
-          <div class="feat-card"><div class="feat-icon">🚫</div><h3>No Personal Data</h3><p>No name, email, or identity collected ever.</p></div>
-          <div class="feat-card"><div class="feat-icon">📊</div><h3>No Analytics</h3><p>No usage tracking, no listening history stored.</p></div>
-          <div class="feat-card"><div class="feat-icon">🌐</div><h3>Lyrics Only</h3><p>Internet used only to fetch lyrics via LRCLIB — just song title and artist.</p></div>
-          <div class="feat-card"><div class="feat-icon">🔐</div><h3>No Third Parties</h3><p>No ad networks or data brokers. Ever.</p></div>
-        </div>
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="reveal">
+    <div class="sec-label">Why SPADES</div>
+    <h2 class="sec-title">Everything you need.<br/>Nothing you don't.</h2>
+    <p class="sec-sub">Built for people who just want to play their music without the nonsense.</p>
+  </div>
+  <div class="feat-grid reveal">
+    <div class="feat-card holo-border">
+      <div class="feat-icon">📶</div>
+      <h3>Fully Offline</h3>
+      <p>Play your local music files without any internet connection. Works anywhere, anytime.</p>
+    </div>
+    <div class="feat-card holo-border">
+      <div class="feat-icon">🚫</div>
+      <h3>Zero Ads</h3>
+      <p>No advertisements, no pop-ups, no interruptions. Ever. Just pure uninterrupted music.</p>
+    </div>
+    <div class="feat-card holo-border">
+      <div class="feat-icon">🔒</div>
+      <h3>No Account Needed</h3>
+      <p>No sign up, no login, no personal data collected. Install and play. That's it.</p>
+    </div>
+    <div class="feat-card holo-border">
+      <div class="feat-icon">📁</div>
+      <h3>Smart Folder Watching</h3>
+      <p>Add a folder and SPADES automatically detects new songs. Your library stays up to date.</p>
+    </div>
+    <div class="feat-card holo-border">
+      <div class="feat-icon">📝</div>
+      <h3>Synced Lyrics</h3>
+      <p>Click any song artwork to instantly see synced lyrics fetched from LRCLIB. Supports Tamil, Hindi and more.</p>
+    </div>
+    <div class="feat-card holo-border">
+      <div class="feat-icon">🎛️</div>
+      <h3>Queue &amp; Shuffle</h3>
+      <p>Manage your playback queue, reorder songs, shuffle and repeat with full control.</p>
+    </div>
+    <div class="feat-card holo-border">
+      <div class="feat-icon">🔍</div>
+      <h3>Instant Search</h3>
+      <p>Search your entire library by song name, artist, or album. Find any track in seconds.</p>
+    </div>
+    <div class="feat-card holo-border">
+      <div class="feat-icon">🪟</div>
+      <h3>Glass Effect UI</h3>
+      <p>Adjust the beautiful acrylic glass blur effect intensity to match your style in Settings.</p>
+    </div>
+    <div class="feat-card holo-border">
+      <div class="feat-icon">🎨</div>
+      <h3>Beautiful Design</h3>
+      <p>A stunning dark purple UI that makes your music library look like it belongs on a poster.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="hiw" id="how">
+  <div class="reveal">
+    <div class="sec-label">Getting started</div>
+    <h2 class="sec-title">Up and running in minutes</h2>
+    <p class="sec-sub">Four simple steps to your perfect music experience.</p>
+  </div>
+  <div class="steps-row reveal">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Download</h3>
+      <p>Get SPADES free from the Microsoft Store in one click.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Add Music</h3>
+      <p>Click Add Files or Add Folder to add your music library.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Play</h3>
+      <p>Click any song to play. Shuffle, queue, repeat — all yours.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <h3>View Lyrics</h3>
+      <p>Tap the album art to instantly load synced lyrics.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about">
+    <div class="about-text reveal">
+      <div class="sec-label">The developer</div>
+      <h2 class="sec-title">Built by a 16&#8202;year old from Melbourne</h2>
+      <p>SPADES Music App was built entirely by a self-taught developer from Melbourne, Australia — originally from Tamil Nadu, India.</p>
+      <p>No formal training, no financial support, no team. Just a passion for music, a love for building things, and a lot of determination.</p>
+      <p>Built in Flutter, packaged with MSIX, and published on the Microsoft Store — all completely free, all by one person at 16 years old.</p>
+      <a href="https://github.com/Anirudh675/SPADES-MUSIC-APP" class="btn-ghost" target="_blank" style="margin-top:1.25rem;display:inline-flex">View Source on GitHub</a>
+    </div>
+    <div class="about-card reveal">
+      <div class="av">👨‍💻</div>
+      <h3>Anirudh675</h3>
+      <div class="about-role">Independent Developer · Age 16</div>
+      <p>Self-taught Flutter developer from Melbourne, Australia. Published SPADES on the Microsoft Store at 16 — completely free, completely solo.</p>
+      <div class="tags">
+        <span class="tag">Flutter</span>
+        <span class="tag">Dart</span>
+        <span class="tag">Windows</span>
+        <span class="tag">MSIX</span>
+        <span class="tag">Melbourne</span>
+        <span class="tag">Tamil Nadu</span>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- CTA -->
-    <section class="cta-section">
-      <div class="cta-inner reveal">
-        <h2>Ready to enjoy your music?</h2>
-        <p>Download SPADES Music App for free right now. No credit card, no account, no catch.</p>
-        <a href="https://apps.microsoft.com/detail/9P9L6P0QXZBL" class="btn-main" style="font-size:.92rem;padding:.9rem 2rem" target="_blank">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.551H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
-          Download Free on Microsoft Store
-        </a>
-        <p class="cta-note">Available for <span>Windows 10 &amp; 11</span> · <span>Completely free</span> · <span>No ads ever</span></p>
-      </div>
-    </section>
+<!-- PRIVACY -->
+<section id="privacy">
+  <div style="max-width:700px; margin:0 auto;" class="reveal">
+    <div class="sec-label">Privacy</div>
+    <h2 class="sec-title">We collect nothing</h2>
+    <p class="sec-sub">Your privacy matters. SPADES is designed to respect it completely.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:2rem;">
+      <div class="feat-card"><div class="feat-icon">🚫</div><h3>No Personal Data</h3><p>No name, email, or identity collected ever.</p></div>
+      <div class="feat-card"><div class="feat-icon">📊</div><h3>No Analytics</h3><p>No usage tracking, no listening history stored.</p></div>
+      <div class="feat-card"><div class="feat-icon">🌐</div><h3>Lyrics Only</h3><p>Internet used only to fetch lyrics via LRCLIB — just song title and artist.</p></div>
+      <div class="feat-card"><div class="feat-icon">🔐</div><h3>No Third Parties</h3><p>No ad networks or data brokers. Ever.</p></div>
+    </div>
+  </div>
+</section>
 
-    <footer>
-      <div class="footer-logo">♠ SPADES Music App™</div>
-      <ul class="footer-links">
-        <li><a href="#features">Features</a></li>
-        <li><a href="#privacy">Privacy</a></li>
-        <li><a href="https://github.com/Anirudh675/SPADES-MUSIC-APP" target="_blank">GitHub</a></li>
-        <li><a href="https://apps.microsoft.com/detail/9P9L6P0QXZBL">Download</a></li>
-      </ul>
-      <div class="footer-copy">© 2026 Anirudh675. All rights reserved.</div>
-    </footer>
+<!-- CTA -->
+<section class="cta">
+  <div class="cta-glow"></div>
+  <div class="cta-inner reveal">
+    <h2>Ready to enjoy your music?</h2>
+    <p>Download SPADES Music App for free right now. No credit card, no account, no catch.</p>
+    <a href="https://apps.microsoft.com/detail/9P9L6P0QXZBL" class="btn-main" style="font-size:0.95rem; padding:0.9rem 2rem;" target="_blank">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.551H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+      Download Free on Microsoft Store
+    </a>
+    <p class="cta-note">Available for <span>Windows 10 &amp; 11</span> · <span>Completely free</span> · <span>No ads ever</span></p>
+  </div>
+</section>
 
-  </div><!-- /#site-content -->
-</div><!-- /#overlay -->
+<footer>
+  <div class="footer-logo">♠ SPADES Music App™</div>
+  <ul class="footer-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#privacy">Privacy</a></li>
+    <li><a href="https://github.com/Anirudh675/SPADES-MUSIC-APP" target="_blank">GitHub</a></li>
+    <li><a href="https://apps.microsoft.com/detail/9P9L6P0QXZBL">Download</a></li>
+  </ul>
+  <div class="footer-copy">© 2026 Anirudh675. All rights reserved.</div>
+</footer>
+
+</div><!-- /#content -->
 
 <script>
-// ════════════════════════════════════════════════
-//  GLOBAL STATE
-// ════════════════════════════════════════════════
-let phase = 'loading'; // loading → computer → poweron → emerge → hero → scroll
-let scrollEnabled = false;
-let camTargetZ = 0;
-let camTargetX = 0;
-let camTargetY = 0;
-let mouseX = 0, mouseY = 0;
+// ============================================================
+//  THREE.JS BACKGROUND — Particle Grid + Floating Orbs
+// ============================================================
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
 
-// ════════════════════════════════════════════════
-//  LOADER
-// ════════════════════════════════════════════════
-const loaderBar = document.getElementById('loader-bar');
-const loaderText = document.getElementById('loader-text');
-const loaderMsgs = [
-  'INITIALISING ENVIRONMENT...',
-  'BUILDING 3D SCENE...',
-  'LOADING PARTICLES...',
-  'WARMING UP GPU...',
-  'READY'
-];
-let lPct = 0;
-const lInterval = setInterval(() => {
-  lPct += Math.random() * 22 + 8;
-  if (lPct > 100) lPct = 100;
-  loaderBar.style.width = lPct + '%';
-  const idx = Math.min(Math.floor(lPct / 25), loaderMsgs.length - 1);
-  loaderText.textContent = loaderMsgs[idx];
-  if (lPct >= 100) {
-    clearInterval(lInterval);
-    setTimeout(startExperience, 400);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 30);
+
+  // ---- GRID PLANE ----
+  const gridGeo = new THREE.PlaneGeometry(120, 120, 40, 40);
+  const positions = gridGeo.attributes.position;
+  for (let i = 0; i < positions.count; i++) {
+    positions.setZ(i, (Math.random() - 0.5) * 2);
   }
-}, 120);
-
-// ════════════════════════════════════════════════
-//  THREE.JS SETUP
-// ════════════════════════════════════════════════
-const canvas = document.getElementById('main-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x02010a, 0.018);
-
-const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 400);
-camera.position.set(0, 2, 28);
-
-// ─── LIGHTING ───
-const ambientLight = new THREE.AmbientLight(0x120820, 1.5);
-scene.add(ambientLight);
-
-const purpleLight = new THREE.PointLight(0x7c3aed, 6, 40);
-purpleLight.position.set(-8, 5, 5);
-scene.add(purpleLight);
-
-const cyanLight = new THREE.PointLight(0x06b6d4, 3, 35);
-cyanLight.position.set(10, -3, 3);
-scene.add(cyanLight);
-
-const screenGlow = new THREE.PointLight(0xa855f7, 0, 20);
-screenGlow.position.set(0, 1.2, 6);
-scene.add(screenGlow);
-
-const rimLight = new THREE.DirectionalLight(0x1e0a3c, 2);
-rimLight.position.set(0, 8, -10);
-scene.add(rimLight);
-
-// ─── FLOOR GRID ───
-const gridHelper = new THREE.GridHelper(200, 60, 0x3d1a7a, 0x1a0840);
-gridHelper.position.y = -8;
-gridHelper.material.opacity = 0.35;
-gridHelper.material.transparent = true;
-scene.add(gridHelper);
-
-// ─── BACKGROUND PARTICLES ───
-const pCount = 350;
-const pGeo = new THREE.BufferGeometry();
-const pPos = new Float32Array(pCount * 3);
-for (let i = 0; i < pCount; i++) {
-  pPos[i*3]   = (Math.random()-.5) * 160;
-  pPos[i*3+1] = (Math.random()-.5) * 90;
-  pPos[i*3+2] = (Math.random()-.5) * 100 - 20;
-}
-pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-const pMat = new THREE.PointsMaterial({ color:0xa855f7, size:0.2, transparent:true, opacity:0.4, sizeAttenuation:true });
-const particles = new THREE.Points(pGeo, pMat);
-scene.add(particles);
-
-// ─── ORBITING RINGS ───
-const rings = [];
-const ringData = [
-  { r:14, tube:.04, color:0x7c3aed, y:-2, rx:.3, rz:.1 },
-  { r:18, tube:.025, color:0x06b6d4, y:0, rx:.5, rz:.2 },
-  { r:11, tube:.05, color:0xec4899, y:1, rx:.15, rz:.4 },
-];
-ringData.forEach(d => {
-  const geo = new THREE.TorusGeometry(d.r, d.tube, 8, 80);
-  const mat = new THREE.MeshBasicMaterial({ color:d.color, transparent:true, opacity:.12 });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.rotation.x = d.rx; mesh.rotation.z = d.rz;
-  mesh.position.y = d.y; mesh.position.z = -15;
-  scene.add(mesh);
-  rings.push({ mesh, speed: 0.001 + Math.random() * 0.001 });
-});
-
-// ─── 3D COMPUTER (built from primitives) ───
-const computerGroup = new THREE.Group();
-
-// Monitor base/stand
-const standGeo = new THREE.CylinderGeometry(0.15, 0.7, 0.15, 8);
-const standMat = new THREE.MeshStandardMaterial({ color:0x1a0f2e, roughness:.6, metalness:.5 });
-const stand = new THREE.Mesh(standGeo, standMat);
-stand.position.y = -3.4;
-computerGroup.add(stand);
-
-const neckGeo = new THREE.CylinderGeometry(0.1, 0.15, 1.2, 8);
-const neck = new THREE.Mesh(neckGeo, standMat);
-neck.position.y = -2.7;
-computerGroup.add(neck);
-
-// Monitor casing (outer shell)
-const monitorCaseGeo = new THREE.BoxGeometry(7.6, 4.8, 0.5);
-const monitorCaseMat = new THREE.MeshStandardMaterial({ color:0x100820, roughness:.4, metalness:.6 });
-const monitorCase = new THREE.Mesh(monitorCaseGeo, monitorCaseMat);
-monitorCase.position.z = -0.05;
-computerGroup.add(monitorCase);
-
-// Monitor bezel
-const bezelGeo = new THREE.BoxGeometry(7.2, 4.4, 0.15);
-const bezelMat = new THREE.MeshStandardMaterial({ color:0x0a0518, roughness:.3, metalness:.8 });
-const bezel = new THREE.Mesh(bezelGeo, bezelMat);
-bezel.position.z = 0.22;
-computerGroup.add(bezel);
-
-// Screen surface (the glowing panel)
-const screenGeo = new THREE.PlaneGeometry(6.6, 4.0);
-const screenMat = new THREE.MeshBasicMaterial({ color:0x02010a });
-const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-screenMesh.position.z = 0.31;
-computerGroup.add(screenMesh);
-
-// Screen texture (drawn on canvas)
-const screenCanvas = document.createElement('canvas');
-screenCanvas.width = 1024; screenCanvas.height = 640;
-const sCtx = screenCanvas.getContext('2d');
-drawScreenContent(sCtx, 0); // dark/off initially
-const screenTexture = new THREE.CanvasTexture(screenCanvas);
-screenMesh.material = new THREE.MeshBasicMaterial({ map: screenTexture });
-
-// Glow plane behind screen
-const glowPlaneGeo = new THREE.PlaneGeometry(6.8, 4.2);
-const glowPlaneMat = new THREE.MeshBasicMaterial({ color:0x7c3aed, transparent:true, opacity:0 });
-const glowPlane = new THREE.Mesh(glowPlaneGeo, glowPlaneMat);
-glowPlane.position.z = 0.29;
-computerGroup.add(glowPlane);
-
-// Camera (tiny lens detail)
-const camDotGeo = new THREE.CircleGeometry(0.06, 16);
-const camDotMat = new THREE.MeshBasicMaterial({ color:0x222040 });
-const camDot = new THREE.Mesh(camDotGeo, camDotMat);
-camDot.position.set(0, 2.35, 0.32);
-computerGroup.add(camDot);
-
-// Power LED
-const ledGeo = new THREE.CircleGeometry(0.05, 12);
-const ledMat = new THREE.MeshBasicMaterial({ color:0x7c3aed, transparent:true, opacity:0 });
-const ledDot = new THREE.Mesh(ledGeo, ledMat);
-ledDot.position.set(3.2, -1.9, 0.32);
-computerGroup.add(ledDot);
-
-computerGroup.position.set(0, 0.5, 0);
-computerGroup.scale.set(0, 0, 0); // starts invisible
-scene.add(computerGroup);
-
-// ─── EMERGENCE PANELS (UI elements that fly out from screen) ───
-const emergePanels = [];
-function createEmergePanel(x, y, z, w, h, color, delay) {
-  const geo = new THREE.PlaneGeometry(w, h);
-  const mat = new THREE.MeshBasicMaterial({
-    color, transparent:true, opacity:0, side: THREE.DoubleSide
+  const gridMat = new THREE.MeshBasicMaterial({
+    color: 0x7c3aed, wireframe: true, transparent: true, opacity: 0.08
   });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(x, y, z);
-  mesh.scale.set(0.01, 0.01, 0.01);
-  scene.add(mesh);
-  emergePanels.push({ mesh, targetX:x, targetY:y, targetZ:z, delay });
-  return mesh;
-}
+  const grid = new THREE.Mesh(gridGeo, gridMat);
+  grid.rotation.x = -Math.PI / 2.8;
+  grid.position.y = -18;
+  grid.position.z = -20;
+  scene.add(grid);
 
-// Floating UI panels that emerge
-const ep1 = createEmergePanel(-6, 2, 4, 4.5, 2.8, 0x7c3aed, 0);
-const ep2 = createEmergePanel(6.5, 1, 3, 3.8, 2.6, 0x0891b2, 200);
-const ep3 = createEmergePanel(-5.5, -2.5, 5, 3.5, 2, 0xec4899, 400);
-const ep4 = createEmergePanel(5.5, -2.8, 4, 4, 2.2, 0x065f46, 600);
-const ep5 = createEmergePanel(0, 4, 6, 5, 1.5, 0x4c1d95, 800);
+  // ---- PARTICLES ----
+  const particleCount = 280;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(particleCount * 3);
+  const pSizes = new Float32Array(particleCount);
+  for (let i = 0; i < particleCount; i++) {
+    pPos[i * 3]     = (Math.random() - 0.5) * 120;
+    pPos[i * 3 + 1] = (Math.random() - 0.5) * 80;
+    pPos[i * 3 + 2] = (Math.random() - 0.5) * 60;
+    pSizes[i] = Math.random() * 2.5 + 0.5;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  pGeo.setAttribute('size', new THREE.BufferAttribute(pSizes, 1));
 
-// Draw panel textures
-function makePanel(title, items, colorHex) {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 320;
-  const x = c.getContext('2d');
-  // Background
-  x.fillStyle = '#0a0520';
-  x.fillRect(0, 0, 512, 320);
-  // Border glow
-  const hex = '#' + colorHex.toString(16).padStart(6,'0');
-  x.strokeStyle = hex + '55';
-  x.lineWidth = 2;
-  x.strokeRect(1, 1, 510, 318);
-  // Top bar
-  x.fillStyle = hex + '22';
-  x.fillRect(0, 0, 512, 38);
-  // Title
-  x.fillStyle = '#f0ebff';
-  x.font = 'bold 18px Syne, sans-serif';
-  x.fillText(title, 16, 25);
-  // Items
-  x.font = '13px DM Sans, sans-serif';
-  x.fillStyle = '#8b7db8';
-  items.forEach((it, i) => {
-    x.fillText('• ' + it, 16, 68 + i * 26);
+  const pMat = new THREE.PointsMaterial({
+    color: 0xa855f7, size: 0.35, transparent: true, opacity: 0.55,
+    sizeAttenuation: true
   });
-  return new THREE.CanvasTexture(c);
-}
+  const particles = new THREE.Points(pGeo, pMat);
+  scene.add(particles);
 
-ep1.material = new THREE.MeshBasicMaterial({ map: makePanel('♠ Library', ['Blinding Lights — The Weeknd','Levitating — Dua Lipa','Heat Waves — Glass Animals','As It Was — Harry Styles'], 0x7c3aed), transparent:true, opacity:0 });
-ep2.material = new THREE.MeshBasicMaterial({ map: makePanel('◈ Features', ['100% Offline','Zero Ads','Synced Lyrics','Glass Effect UI'], 0x0891b2), transparent:true, opacity:0 });
-ep3.material = new THREE.MeshBasicMaterial({ map: makePanel('◉ Now Playing', ['▶ Blinding Lights','1:16 / 3:20','Queue: 5 songs','Shuffle: ON'], 0xec4899), transparent:true, opacity:0 });
-ep4.material = new THREE.MeshBasicMaterial({ map: makePanel('⬡ Privacy', ['No personal data','No analytics','Lyrics only','No third parties'], 0x065f46), transparent:true, opacity:0 });
-ep5.material = new THREE.MeshBasicMaterial({ map: makePanel('SPADES Music App — Free Windows Music Player', ['♠ Beautiful glass-morphic UI','♠ Smart folder watching','♠ Download free from Microsoft Store',''], 0x4c1d95), transparent:true, opacity:0 });
-
-// ─── HERO TEXT PLANE ───
-const heroTextCanvas = document.createElement('canvas');
-heroTextCanvas.width = 1200; heroTextCanvas.height = 500;
-const htCtx = heroTextCanvas.getContext('2d');
-drawHeroText(htCtx);
-const heroTextTex = new THREE.CanvasTexture(heroTextCanvas);
-const heroTextGeo = new THREE.PlaneGeometry(12, 5);
-const heroTextMat = new THREE.MeshBasicMaterial({ map:heroTextTex, transparent:true, opacity:0 });
-const heroTextPlane = new THREE.Mesh(heroTextGeo, heroTextMat);
-heroTextPlane.position.set(0, 1, 14);
-scene.add(heroTextPlane);
-
-// ─── FLOATING PARTICLES from screen ───
-const burstGeo = new THREE.BufferGeometry();
-const bCount = 120;
-const bPos = new Float32Array(bCount * 3);
-const bVel = new Float32Array(bCount * 3);
-for (let i = 0; i < bCount; i++) {
-  bPos[i*3] = (Math.random()-.5) * 0.5;
-  bPos[i*3+1] = (Math.random()-.5) * 0.3;
-  bPos[i*3+2] = 0.5;
-  bVel[i*3] = (Math.random()-.5) * 0.08;
-  bVel[i*3+1] = Math.random() * 0.06;
-  bVel[i*3+2] = Math.random() * 0.12 + 0.02;
-}
-burstGeo.setAttribute('position', new THREE.BufferAttribute(bPos, 3));
-const burstMat = new THREE.PointsMaterial({ color:0xa855f7, size:.12, transparent:true, opacity:0 });
-const burst = new THREE.Points(burstGeo, burstMat);
-scene.add(burst);
-
-// ════════════════════════════════════════════════
-//  CANVAS DRAWING HELPERS
-// ════════════════════════════════════════════════
-function drawScreenContent(ctx, power) {
-  // power: 0 = off, 1 = full
-  ctx.clearRect(0, 0, 1024, 640);
-  if (power < 0.01) {
-    ctx.fillStyle = '#02010a';
-    ctx.fillRect(0,0,1024,640);
-    return;
-  }
-  // BG gradient
-  const grd = ctx.createRadialGradient(512,320,0,512,320,600);
-  grd.addColorStop(0, `rgba(20,8,50,${power})`);
-  grd.addColorStop(1, `rgba(2,1,10,${power})`);
-  ctx.fillStyle = grd;
-  ctx.fillRect(0,0,1024,640);
-
-  if (power < 0.3) return;
-
-  // Grid lines
-  ctx.strokeStyle = `rgba(124,58,237,${power * 0.12})`;
-  ctx.lineWidth = 1;
-  for (let y = 0; y < 640; y += 32) {
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(1024,y); ctx.stroke();
-  }
-  for (let x = 0; x < 1024; x += 32) {
-    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,640); ctx.stroke();
-  }
-
-  const a = Math.max(0, power - 0.3) / 0.7;
-
-  // Scanlines
-  ctx.fillStyle = `rgba(139,92,246,${0.03 * a})`;
-  for (let y = 0; y < 640; y += 4) {
-    ctx.fillRect(0, y, 1024, 1);
-  }
-
-  // Title bar (simulated OS bar)
-  ctx.fillStyle = `rgba(15,8,40,${0.9*a})`;
-  ctx.fillRect(0, 0, 1024, 42);
-  ctx.fillStyle = `rgba(139,92,246,${0.3*a})`;
-  ctx.fillRect(0, 41, 1024, 1);
-
-  // Traffic light dots
-  const dotColors = ['#ff5f57','#febc2e','#28c840'];
-  dotColors.forEach((c, i) => {
-    ctx.beginPath(); ctx.arc(18 + i*22, 21, 7, 0, Math.PI*2);
-    ctx.fillStyle = c.replace('#','rgba(') + `,${a})`; // rough trick
-    ctx.fillStyle = c;
-    ctx.globalAlpha = a;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  });
-
-  // Title text
-  ctx.globalAlpha = a;
-  ctx.fillStyle = '#8b7db8';
-  ctx.font = '500 14px DM Sans';
-  ctx.fillText('♠ SPADES Music App', 420, 27);
-
-  // Logo central
-  ctx.font = `bold ${Math.floor(96*a)}px Syne`;
-  ctx.textAlign = 'center';
-  const grad = ctx.createLinearGradient(512-200,0,512+200,0);
-  grad.addColorStop(0,'#a855f7'); grad.addColorStop(0.5,'#06b6d4'); grad.addColorStop(1,'#ec4899');
-  ctx.fillStyle = grad;
-  ctx.shadowColor = '#7c3aed'; ctx.shadowBlur = 40*a;
-  ctx.fillText('♠', 512, 280 + (1-a)*40);
-  ctx.shadowBlur = 0;
-
-  ctx.font = `800 ${Math.floor(42*a)}px Syne`;
-  ctx.fillStyle = `rgba(240,235,255,${a})`;
-  ctx.fillText('SPADES', 512, 340 + (1-a)*30);
-
-  ctx.font = `300 ${Math.floor(18*a)}px DM Sans`;
-  ctx.fillStyle = `rgba(139,92,246,${a})`;
-  ctx.fillText('FREE OFFLINE MUSIC PLAYER FOR WINDOWS', 512, 380 + (1-a)*20);
-
-  ctx.textAlign = 'left';
-  ctx.globalAlpha = 1;
-  screenTexture.needsUpdate = true;
-}
-
-function drawHeroText(ctx) {
-  ctx.clearRect(0,0,1200,500);
-  // Badge
-  ctx.fillStyle = 'rgba(139,92,246,0.15)';
-  ctx.beginPath();
-  const bw = 340, bh = 32, bx = 600-bw/2, by = 20;
-  roundRect(ctx, bx, by, bw, bh, 16);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(139,92,246,0.4)'; ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = '#a855f7'; ctx.font = '600 13px DM Sans'; ctx.textAlign = 'center';
-  ctx.fillText('FREE ON MICROSOFT STORE — WINDOWS 10 & 11', 600, 42);
-
-  // H1
-  const g1 = ctx.createLinearGradient(200,0,1000,0);
-  g1.addColorStop(0,'#f0ebff'); g1.addColorStop(1,'#f0ebff');
-  ctx.fillStyle = g1; ctx.font = '800 82px Syne'; ctx.textAlign = 'center';
-  ctx.shadowColor = 'rgba(124,58,237,0.3)'; ctx.shadowBlur = 30;
-  ctx.fillText('Music that\'s', 600, 160);
-  ctx.shadowBlur = 0;
-
-  const g2 = ctx.createLinearGradient(200,0,1000,0);
-  g2.addColorStop(0,'#a855f7'); g2.addColorStop(0.5,'#06b6d4'); g2.addColorStop(1,'#ec4899');
-  ctx.fillStyle = g2; ctx.shadowColor = '#7c3aed'; ctx.shadowBlur = 40;
-  ctx.fillText('actually yours.', 600, 270);
-  ctx.shadowBlur = 0;
-
-  // Subtext
-  ctx.fillStyle = 'rgba(139,92,246,0.7)'; ctx.font = '300 24px DM Sans';
-  ctx.fillText('Beautifully designed. Completely offline. Zero ads.', 600, 340);
-
-  // Buttons
-  const bx2 = 600 - 240;
-  ctx.fillStyle = 'rgba(124,58,237,0.9)';
-  roundRect(ctx, bx2, 385, 200, 52, 26); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = '600 17px DM Sans'; ctx.textAlign = 'center';
-  ctx.fillText('Download Free', bx2+100, 417);
-
-  ctx.strokeStyle = 'rgba(139,92,246,0.4)'; ctx.lineWidth = 1.5;
-  roundRect(ctx, bx2+220, 385, 190, 52, 26); ctx.stroke();
-  ctx.fillStyle = 'rgba(240,235,255,0.7)'; ctx.font = '500 17px DM Sans';
-  ctx.fillText('Explore Features ↓', bx2+315, 417);
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
-  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
-  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
-  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
-  ctx.closePath();
-}
-
-// ════════════════════════════════════════════════
-//  EXPERIENCE PHASES
-// ════════════════════════════════════════════════
-function startExperience() {
-  // Hide loader
-  gsap.to('#loader', { opacity:0, duration:.6, onComplete:() => {
-    document.getElementById('loader').style.display = 'none';
-  }});
-  gsap.to('#skip-btn', { opacity:1, duration:.4, delay:.3 });
-  gsap.to('#phase-label', { opacity:1, duration:.4, delay:.5 });
-  document.getElementById('scanlines').classList.add('visible');
-
-  phase = 'computer';
-  updatePhaseLabel('▸ COMPUTER APPEARING');
-
-  // Computer materializes (scale up)
-  gsap.to(computerGroup.scale, {
-    x:1, y:1, z:1, duration:1.4,
-    ease:'elastic.out(1,0.6)',
-    delay:.3,
-    onComplete: beginPowerOn
-  });
-
-  // Camera starts far back
-  camera.position.set(0, 4, 45);
-  gsap.to(camera.position, { z:22, y:2, duration:2.5, ease:'power3.inOut', delay:.3 });
-}
-
-let screenPower = 0;
-let powerInterval = null;
-function beginPowerOn() {
-  phase = 'poweron';
-  updatePhaseLabel('▸ SCREEN POWERING ON');
-
-  // LED blink
-  gsap.to(ledMat, { opacity:1, duration:.2, yoyo:true, repeat:5 });
-
-  // Screen glow
-  setTimeout(() => {
-    powerInterval = setInterval(() => {
-      screenPower = Math.min(1, screenPower + 0.025);
-      drawScreenContent(sCtx, screenPower);
-      screenTexture.needsUpdate = true;
-      // Screen glow light
-      screenGlow.intensity = screenPower * 8;
-      glowPlaneMat.opacity = screenPower * 0.06;
-      if (screenPower >= 1) {
-        clearInterval(powerInterval);
-        setTimeout(beginEmergence, 600);
-      }
-    }, 30);
-  }, 600);
-}
-
-function beginEmergence() {
-  phase = 'emerge';
-  updatePhaseLabel('▸ INTERFACE EMERGING');
-
-  // Camera swoops forward through the screen
-  gsap.to(camera.position, { z:8, y:1, duration:2.8, ease:'power3.inOut' });
-
-  // Burst particles from screen
-  gsap.to(burstMat, { opacity:.6, duration:.3, delay:.4 });
-  gsap.to(burstMat, { opacity:0, duration:1, delay:1.5 });
-
-  // Panels emerge
-  [ep1,ep2,ep3,ep4,ep5].forEach((p, i) => {
-    gsap.to(p.scale, { x:1, y:1, z:1, duration:1.0, ease:'elastic.out(1,.7)', delay:.5 + i*.2 });
-    gsap.to(p.material, { opacity:.88, duration:.6, delay:.5 + i*.2 });
-    // Panels float slightly
-    gsap.to(p.position, {
-      y: p.position.y + .3,
-      duration:3 + i*.4,
-      ease:'sine.inOut',
-      yoyo:true, repeat:-1
+  // ---- FLOATING ORBS ----
+  const orbData = [
+    { color: 0x7c3aed, size: 3.5, x: -22, y: 8, z: -12 },
+    { color: 0x06b6d4, size: 2.2, x: 18, y: -6, z: -8 },
+    { color: 0xec4899, size: 2.8, x: 5, y: 12, z: -18 },
+    { color: 0xa855f7, size: 1.8, x: -10, y: -10, z: -5 },
+    { color: 0x0891b2, size: 1.4, x: 24, y: 6, z: -15 },
+  ];
+  const orbs = [];
+  orbData.forEach(d => {
+    const geo = new THREE.SphereGeometry(d.size, 16, 16);
+    const mat = new THREE.MeshBasicMaterial({
+      color: d.color, transparent: true, opacity: 0.12
     });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(d.x, d.y, d.z);
+    scene.add(mesh);
+
+    // Glow ring
+    const ringGeo = new THREE.RingGeometry(d.size * 1.5, d.size * 1.7, 32);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: d.color, transparent: true, opacity: 0.06, side: THREE.DoubleSide
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.set(d.x, d.y, d.z);
+    scene.add(ring);
+    orbs.push({ mesh, ring, baseY: d.y, phase: Math.random() * Math.PI * 2 });
   });
 
-  // Hero text plane fades in
-  gsap.to(heroTextMat, { opacity:1, duration:1, delay:1.8 });
-  gsap.to(heroTextPlane.position, { z:15, duration:2.5, ease:'power3.out', delay:.6 });
-
-  // Computer scales back and moves behind
-  gsap.to(computerGroup.position, { z:-4, y:0, duration:2.5, ease:'power3.inOut', delay:1 });
-  gsap.to(computerGroup.scale, { x:.7, y:.7, z:.7, duration:2.5, ease:'power3.inOut', delay:1 });
-
-  setTimeout(() => {
-    phase = 'hero';
-    updatePhaseLabel('▸ SCROLL TO EXPLORE');
-    document.getElementById('main-nav').classList.add('visible');
-    document.getElementById('site-content').classList.add('active');
-    document.getElementById('holo-ticker').classList.add('visible');
-    gsap.to('#scroll-prompt', { opacity:1, duration:.8 });
-    gsap.to('#skip-btn', { opacity:0, duration:.3 });
-    scrollEnabled = true;
-  }, 3200);
-}
-
-function skipIntro() {
-  if (phase === 'loading') return;
-  // Kill all tweens and jump to end state
-  gsap.killTweensOf(computerGroup.scale);
-  gsap.killTweensOf(computerGroup.position);
-  gsap.killTweensOf(camera.position);
-  [ep1,ep2,ep3,ep4,ep5].forEach(p => {
-    gsap.killTweensOf(p.scale);
-    gsap.killTweensOf(p.material);
-    p.scale.set(1,1,1);
-    p.material.opacity = .88;
-  });
-  screenPower = 1;
-  drawScreenContent(sCtx, 1);
-  screenTexture.needsUpdate = true;
-  screenGlow.intensity = 8;
-  computerGroup.scale.set(.7,.7,.7);
-  computerGroup.position.set(0,0,-4);
-  camera.position.set(0,1,10);
-  gsap.to(heroTextMat, { opacity:1, duration:.5 });
-  heroTextPlane.position.z = 15;
-  clearInterval(powerInterval);
-  phase = 'hero';
-  updatePhaseLabel('▸ SCROLL TO EXPLORE');
-  document.getElementById('main-nav').classList.add('visible');
-  document.getElementById('site-content').classList.add('active');
-  document.getElementById('holo-ticker').classList.add('visible');
-  gsap.to('#scroll-prompt', { opacity:1, duration:.4 });
-  gsap.to('#skip-btn', { opacity:0, duration:.3 });
-  scrollEnabled = true;
-}
-
-function updatePhaseLabel(txt) {
-  const el = document.getElementById('phase-label');
-  el.textContent = txt;
-}
-
-document.getElementById('skip-btn').addEventListener('click', skipIntro);
-
-// ════════════════════════════════════════════════
-//  SCROLL CAMERA MOVEMENT
-// ════════════════════════════════════════════════
-let scrollY = 0;
-window.addEventListener('scroll', () => {
-  if (!scrollEnabled) return;
-  scrollY = window.scrollY;
-  const maxScroll = document.body.scrollHeight - window.innerHeight;
-  const pct = scrollY / maxScroll;
-
-  // Camera moves forward as user scrolls, then pulls back
-  camTargetZ = 10 - pct * 14;
-  camTargetY = 1 - pct * 2;
-
-  // Fade out 3D hero elements
-  const fade = Math.max(0, 1 - pct * 3);
-  heroTextMat.opacity = fade;
-  [ep1,ep2,ep3,ep4,ep5].forEach(p => {
-    p.material.opacity = fade * .88;
+  // ---- MOUSE PARALLAX ----
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', e => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 
-  // Hide scroll prompt
-  if (scrollY > 50) gsap.to('#scroll-prompt', { opacity:0, duration:.3 });
+  // ---- SCROLL ----
+  let scrollY = 0;
+  window.addEventListener('scroll', () => { scrollY = window.scrollY; });
 
-  // Phase label
-  if (pct > 0.05) gsap.to('#phase-label', { opacity:0, duration:.3 });
-});
+  // ---- RESIZE ----
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
 
-// ════════════════════════════════════════════════
-//  MOUSE PARALLAX
-// ════════════════════════════════════════════════
+  // ---- ANIMATE ----
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.008;
+
+    // Camera parallax from mouse
+    camera.position.x += (mouseX * 3 - camera.position.x) * 0.03;
+    camera.position.y += (-mouseY * 2 - camera.position.y) * 0.03;
+    // Scroll: move camera slowly forward
+    camera.position.z = 30 - scrollY * 0.012;
+
+    // Grid pulsate
+    grid.material.opacity = 0.06 + Math.sin(t * 0.8) * 0.02;
+    grid.rotation.z = t * 0.02;
+
+    // Particles drift
+    particles.rotation.y = t * 0.04;
+    particles.rotation.x = t * 0.015;
+
+    // Orbs float
+    orbs.forEach((o, i) => {
+      o.mesh.position.y = o.baseY + Math.sin(t * 0.7 + o.phase) * 2;
+      o.ring.position.y = o.mesh.position.y;
+      o.ring.rotation.z = t * 0.3 + i;
+      o.ring.rotation.x = Math.sin(t * 0.2 + i) * 0.5;
+      o.mesh.material.opacity = 0.08 + Math.sin(t + o.phase) * 0.04;
+    });
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+// ============================================================
+//  CUSTOM CURSOR
+// ============================================================
+const cursor = document.getElementById('cursor');
+const trail = document.getElementById('cursor-trail');
+let trailX = 0, trailY = 0;
 document.addEventListener('mousemove', e => {
-  mouseX = (e.clientX / window.innerWidth - .5) * 2;
-  mouseY = (e.clientY / window.innerHeight - .5) * 2;
-});
-
-// ════════════════════════════════════════════════
-//  CURSOR
-// ════════════════════════════════════════════════
-const cur = document.getElementById('cur');
-const curRing = document.getElementById('cur-ring');
-document.addEventListener('mousemove', e => {
-  cur.style.left = e.clientX + 'px';
-  cur.style.top = e.clientY + 'px';
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
   setTimeout(() => {
-    curRing.style.left = e.clientX + 'px';
-    curRing.style.top = e.clientY + 'px';
+    trail.style.left = e.clientX + 'px';
+    trail.style.top = e.clientY + 'px';
   }, 80);
 });
-document.querySelectorAll('a,button,.feat-card,.step,.tag').forEach(el => {
+document.querySelectorAll('a, button, .feat-card, .song-row, .os-dot').forEach(el => {
   el.addEventListener('mouseenter', () => {
-    cur.style.width = '18px'; cur.style.height = '18px';
-    curRing.style.width = '56px'; curRing.style.height = '56px';
+    cursor.style.width = '20px';
+    cursor.style.height = '20px';
+    cursor.style.background = '#a855f7';
+    trail.style.width = '60px';
+    trail.style.height = '60px';
   });
   el.addEventListener('mouseleave', () => {
-    cur.style.width = '10px'; cur.style.height = '10px';
-    curRing.style.width = '36px'; curRing.style.height = '36px';
+    cursor.style.width = '12px';
+    cursor.style.height = '12px';
+    cursor.style.background = 'var(--purple-light)';
+    trail.style.width = '40px';
+    trail.style.height = '40px';
   });
 });
 
-// ════════════════════════════════════════════════
+// ============================================================
+//  HERO ENTRANCE ANIMATIONS
+// ============================================================
+(function() {
+  // Staggered fade-up for hero elements
+  const els = [
+    document.querySelector('.hero-badge'),
+    document.querySelector('.hero h1'),
+    document.querySelector('.hero-sub'),
+    document.querySelector('.hero-btns'),
+  ];
+  els.forEach((el, i) => {
+    if (!el) return;
+    setTimeout(() => {
+      el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 200 + i * 140);
+  });
+
+  // Hero window 3D entrance
+  const win = document.getElementById('heroWindow');
+  if (win) {
+    setTimeout(() => {
+      win.style.transition = 'opacity 1s ease, transform 1s cubic-bezier(0.16,1,0.3,1)';
+      win.style.opacity = '1';
+      win.style.transform = 'perspective(1200px) rotateX(0deg) translateY(0)';
+    }, 800);
+  }
+})();
+
+// ============================================================
+//  3D TILT ON MOUSE MOVE (APP WINDOW)
+// ============================================================
+(function() {
+  const win = document.getElementById('osWindow');
+  if (!win) return;
+  const wrap = document.getElementById('heroWindow');
+  wrap.addEventListener('mousemove', e => {
+    const rect = wrap.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    win.style.transform = `perspective(1200px) rotateY(${x * 10}deg) rotateX(${-y * 6}deg)`;
+  });
+  wrap.addEventListener('mouseleave', () => {
+    win.style.transform = 'perspective(1200px) rotateY(0) rotateX(0)';
+  });
+})();
+
+// ============================================================
+//  FEATURE CARDS MOUSE SPOTLIGHT
+// ============================================================
+document.querySelectorAll('.feat-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    card.style.setProperty('--mx', x + '%');
+    card.style.setProperty('--my', y + '%');
+  });
+});
+
+// ============================================================
+//  PROGRESS BAR ANIMATION
+// ============================================================
+(function() {
+  const fill = document.querySelector('.progress-bar-fill');
+  if (!fill) return;
+  let pct = 38;
+  setInterval(() => {
+    pct = (pct + 0.05) % 100;
+    fill.style.width = pct + '%';
+    const totalSecs = 200;
+    const cur = Math.floor(totalSecs * pct / 100);
+    const m = Math.floor(cur / 60);
+    const s = (cur % 60).toString().padStart(2, '0');
+    const timeEl = fill.closest('.progress-wrap')?.querySelector('span');
+    if (timeEl) timeEl.textContent = `${m}:${s}`;
+  }, 300);
+})();
+
+// ============================================================
 //  SCROLL REVEAL
-// ════════════════════════════════════════════════
+// ============================================================
 const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('on'); });
-}, { threshold:.08 });
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); });
+}, { threshold: 0.08 });
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-// ════════════════════════════════════════════════
-//  RESIZE
-// ════════════════════════════════════════════════
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// ════════════════════════════════════════════════
-//  RENDER LOOP
-// ════════════════════════════════════════════════
-let t = 0;
-const burstPositions = burstGeo.attributes.position;
-function animate() {
-  requestAnimationFrame(animate);
-  t += 0.01;
-
-  // Camera smooth follow
-  if (scrollEnabled) {
-    camera.position.x += (mouseX * 2.5 - camera.position.x) * 0.04;
-    camera.position.y += (camTargetY - mouseY - camera.position.y) * 0.04;
-    camera.position.z += (camTargetZ - camera.position.z) * 0.04;
-  } else {
-    camera.position.x += (mouseX * 1.5 - camera.position.x) * 0.03;
-  }
-  camera.lookAt(0, 0, 0);
-
-  // Particles drift
-  particles.rotation.y = t * 0.03;
-  particles.rotation.x = t * 0.01;
-
-  // Rings orbit
-  rings.forEach((r, i) => {
-    r.mesh.rotation.z += r.speed * (i%2===0 ? 1 : -1);
-    r.mesh.rotation.y = t * 0.05 * (i+1);
-  });
-
-  // Computer subtle sway
-  if (computerGroup.scale.x > 0.3) {
-    computerGroup.rotation.y = mouseX * 0.08 + Math.sin(t * 0.3) * 0.03;
-    computerGroup.rotation.x = -mouseY * 0.04 + Math.sin(t * 0.2) * 0.015;
-  }
-
-  // Lights pulse
-  purpleLight.intensity = 5 + Math.sin(t * 1.2) * 1.5;
-  cyanLight.intensity = 2.5 + Math.cos(t * 0.9) * 0.8;
-
-  // Burst particles
-  if (phase === 'emerge' || burstMat.opacity > 0.01) {
-    for (let i = 0; i < bCount; i++) {
-      burstPositions.array[i*3]   += bVel[i*3];
-      burstPositions.array[i*3+1] += bVel[i*3+1];
-      burstPositions.array[i*3+2] += bVel[i*3+2];
-      if (burstPositions.array[i*3+2] > 15) {
-        burstPositions.array[i*3]   = (Math.random()-.5) * 0.5;
-        burstPositions.array[i*3+1] = (Math.random()-.5) * 0.3;
-        burstPositions.array[i*3+2] = 0.5;
-      }
+// ============================================================
+//  NAV ACTIVE HIGHLIGHT ON SCROLL
+// ============================================================
+(function() {
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      nav.style.background = 'rgba(4,2,15,0.92)';
+    } else {
+      nav.style.background = 'rgba(4,2,15,0.6)';
     }
-    burstPositions.needsUpdate = true;
-  }
+  });
+})();
 
-  // Grid gentle wave
-  gridHelper.position.y = -8 + Math.sin(t * 0.3) * 0.3;
-
-  renderer.render(scene, camera);
-}
-animate();
-
-// Nav background on scroll
-window.addEventListener('scroll', () => {
-  const nav = document.getElementById('main-nav');
-  if (window.scrollY > 60) {
-    nav.style.background = 'rgba(2,1,10,.92)';
-  } else if (nav.classList.contains('visible')) {
-    nav.style.background = 'rgba(2,1,10,.75)';
-  }
+// ============================================================
+//  SONG ROW CLICK INTERACTION
+// ============================================================
+document.querySelectorAll('.song-row').forEach((row, i) => {
+  row.addEventListener('click', () => {
+    document.querySelectorAll('.song-row').forEach(r => r.classList.remove('playing'));
+    row.classList.add('playing');
+    // Move playing bars
+    document.querySelectorAll('.playing-bar').forEach(pb => {
+      pb.style.display = 'none';
+    });
+    let pb = row.querySelector('.playing-bar');
+    if (!pb) {
+      pb = document.createElement('div');
+      pb.className = 'playing-bar';
+      pb.innerHTML = '<div class="pb"></div><div class="pb"></div><div class="pb"></div>';
+      row.insertBefore(pb, row.querySelector('.song-dur'));
+    }
+    pb.style.display = 'flex';
+  });
 });
+
 </script>
 </body>
 </html>
